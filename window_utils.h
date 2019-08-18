@@ -10,6 +10,7 @@
 
 void CenterWindow(HWND hwnd);
 HWND GetParentWindow(HWND hwnd);
+HWND CreatePopupWindow(HWND parentHandle);
 bool CenterWindowRelativeToParent(HWND window, HWND parent);
 void GetCorrectWindowSize(int* width, int* height);
 void GetDpiAwareWindowSize(int* width, int* height);

@@ -9,6 +9,8 @@
 #include "window_utils.h"
 #include "resource.h"
 
+extern HINSTANCE g_hInstance;
+
 HWND CreateMainWindow(HINSTANCE hInstance, int nCmdShow, std::string title, LPCWSTR windowClassName, WNDPROC winProc) {
     nlohmann::json* appSettings = GetApplicationSettings();
     int default_width = (*appSettings)["bridge"]["window"]["default_size"][0];
@@ -150,4 +152,26 @@ void GetDpiAwareWindowSize(int* width, int* height) {
                   << ceil(newZoomLevel * 0.25 * 100) << "%"
                   << " new width/height = " << *width << "/" << *height;
     }
+}
+
+
+HWND CreatePopupWindow(HWND parentHandle) {
+    nlohmann::json* settings = GetApplicationSettings();
+    bool center_relative_to_parent = (*settings)["bridge"]["window"]["center_relative_to_parent"];
+
+    // Title will be set in BrowserWindow::BrowserWindow().
+    // CW_USEDEFAULT cannot be used with WS_POPUP.
+    HWND hwnd = CreateWindowEx(0, CLASS_NAME_EX, 0, WS_OVERLAPPEDWINDOW,
+            CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+            parentHandle, 0, g_hInstance, 0);
+    _ASSERT(hwnd);
+    if (center_relative_to_parent) {
+        // This won't work properly as real width/height is set later
+        // when BrowserEvents2::WindowSetWidth() / WindowSetHeight()
+        // are triggered. TODO.
+        // CenterWindow(hwnd);
+    }
+    ShowWindow(hwnd, SW_SHOWNORMAL);
+    UpdateWindow(hwnd);
+    return hwnd;
 }

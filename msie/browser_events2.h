@@ -10,8 +10,6 @@
 #include <ExDispid.h>
 class BrowserWindow;
 
-HWND CreatePopupWindow(HWND parentHandle);
-
 class BrowserEvents2 : public DWebBrowserEvents2 {
 private:
     BrowserWindow* browserWindow_;

@@ -23,29 +23,6 @@
 #include "../window_utils.h"
 #include "../resource.h"
 
-extern HINSTANCE g_hInstance;
-
-HWND CreatePopupWindow(HWND parentHandle) {
-    nlohmann::json* settings = GetApplicationSettings();
-    bool center_relative_to_parent = (*settings)["bridge"]["window"]["center_relative_to_parent"];
-
-    // Title will be set in BrowserWindow::BrowserWindow().
-    // CW_USEDEFAULT cannot be used with WS_POPUP.
-    HWND hwnd = CreateWindowEx(0, CLASS_NAME_EX, 0, WS_OVERLAPPEDWINDOW,
-            CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-            parentHandle, 0, g_hInstance, 0);
-    _ASSERT(hwnd);
-    if (center_relative_to_parent) {
-        // This won't work properly as real width/height is set later
-        // when BrowserEvents2::WindowSetWidth() / WindowSetHeight()
-        // are triggered. TODO.
-        // CenterWindow(hwnd);
-    }
-    ShowWindow(hwnd, SW_SHOWNORMAL);
-    UpdateWindow(hwnd);
-    return hwnd;
-}
-
 BrowserEvents2::BrowserEvents2(BrowserWindow* inBrowserWindow)
         : browserWindow_(inBrowserWindow) {
 }

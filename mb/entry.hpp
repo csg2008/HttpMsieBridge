@@ -1,9 +1,13 @@
 #include <windows.h>
+#include <map>
+#include <string>
 #include "bind.h"
 #include "window.h"
 #include "wke.h"
 
 using namespace miniblink_cxx_example;
+
+std::map<std::string, Window*> g_mb;
 
 int mb_open(const wchar_t *url) {
     if (!wkeInitialize()) {
