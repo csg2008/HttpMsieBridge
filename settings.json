@@ -1,0 +1,57 @@
+{
+    "bridge": {
+        "http":{
+            "listen": 8080,
+            "wwwroot": "www",
+            "hides": [],
+            "index": ["index.html", "index.php"],
+            "404_handler": "/pretty-urls.php"
+        },
+        "msie": {
+            "error_page": "www/_error-page.html",
+            "smooth_scroll": false,
+            "enable_f5_refresh": true,
+            "show_context_menu": true,
+            "use_themes": true,
+            "disable_script_debugger": true,
+            "hide_dialog_boxes": false,
+            "silent_operations": true,
+            "autocomplete_forms": false,
+            "windowed_select_control": true,
+            "disable_scrollbars": false,
+            "flat_scrollbars": false,
+            "utf8_url_encoding": true
+        },
+        "window":{
+            "title": "PHP Desktop MSIE",
+            "icon": "",
+            "popup_icon": "",
+            "popup_title": "",
+            "popup_default_size": [800, 600],
+            "default_size": [1024, 700],
+            "minimum_size": [800, 600],
+            "maximum_size": [0, 0],
+            "disable_maximize_button": false,
+            "center_relative_to_parent": true,
+            "center_on_screen": true,
+            "start_maximized": false,
+            "start_fullscreen": false,
+            "always_on_top": false,
+            "dpi_aware": false,
+            "minimize_to_tray": true,
+            "minimize_to_tray_message": "Minimized to tray",
+            "startup_to_tray_message": "welcome to use http msie bridge",
+            "instance": true
+        },
+        "logger": {
+            "show_console": false,
+            "log_level": "DEBUG4",
+            "log_file": "debug.log"
+        },
+        "integration":{
+            "callback":"http://127.0.0.1:8088/notify.html",
+            "homepage":"http://www.singlewindow.sc.cn/",
+            "startup": "E:\\Web\\Software\\PHP72\\php.exe -S 127.0.0.1:8088 E:\\GCC\\code\\msie\\HttpMsieBridge\\x64\\Debug\\test.php"
+        }
+    }
+}

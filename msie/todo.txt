@@ -1,0 +1,43 @@
+MSIE todo:
+ 
+ * Implement modal & modeless dialogs, see 
+   IHostDialogHelper::ShowHTMLDialog()
+   
+ * Implement IDocHostUIHandler2::GetOverrideKeyPath(),
+   it seems that IE 9 or later does not call
+   IDocHostUIHandler::GetOptionKeyPath(), so a solution
+   would be to impolemented GetOverrideKeyPath() and
+   create all possible registry keys. Another way is
+   to hook up to registry api to fix GetOptionKeyPath()
+   not being called:
+   http://stackoverflow.com/a/8918293/623622
+   
+ * disable script debugging messages?
+   http://stackoverflow.com/q/2936279/623622
+   Create registry key "Main\\Disable Script Debugger" and
+   set to "yes".
+ 
+ * IDocHostUiHandler::GetOptionKeyPath()
+   Create this registry key:
+   L"Software\\PHP Desktop\\WebBrowser2 settings";
+   and subkeys: 
+   "MAIN", "MAIN/FeatureControl".
+    
+webbrowser内部使用wininet进行http通信，只需Hook wininet的相关API就可以获取并修改请求头与响应头。
+比如Hook HttpSendRequest，获取到请求句柄HINTERNET hRequest
+然后使用此句柄调用HttpQueryInfo，并使用HTTP_QUERY_RAW_HEADERS标志获取响应头。
+HTTP_QUERY_FLAG_REQUEST_HEADERS和HTTP_QUERY_RAW_HEADERS一起使用以获取请求头。
+获取其它信息，参考MSDN文档：
+https://msdn.microsoft.com/en-us/library/windows/desktop/aa385351(v=vs.85).aspx
+https://msdn.microsoft.com/en-us/library/windows/desktop/aa384238(v=vs.85).aspx
+
+Scripting Object Interfaces (MSHTML):
+https://docs.microsoft.com/en-us/previous-versions/windows/internet-explorer/ie-developer/platform-apis/hh801967(v%3dvs.85)
+
+参考文档：
+https://blog.csdn.net/educast/article/details/21601335
+https://blog.csdn.net/nanjun520/article/details/53024503
+https://blog.csdn.net/zouyouliang1/article/details/44657717
+https://blog.csdn.net/CharlesSimonyi/article/details/17413295
+https://msdn.microsoft.com/en-us/library/cc304070(VS.85).aspx
+https://docs.microsoft.com/en-us/previous-versions/windows/internet-explorer/ie-developer/platform-apis/cc196998(v=vs.85)
