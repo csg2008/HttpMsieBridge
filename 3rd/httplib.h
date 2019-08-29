@@ -417,6 +417,7 @@ public:
   Server &Options(const char *pattern, Handler handler);
 
   bool set_base_dir(const char *path);
+  void set_file_request_handler(Handler handler);
 
   void set_error_handler(Handler handler);
   void set_logger(Logger logger);
@@ -466,6 +467,7 @@ private:
   std::atomic<bool> is_running_;
   std::atomic<socket_t> svr_sock_;
   std::string base_dir_;
+  Handler file_request_handler_;
   Handlers get_handlers_;
   Handlers post_handlers_;
   Handlers put_handlers_;
@@ -2196,6 +2198,10 @@ inline bool Server::set_base_dir(const char *path) {
   return false;
 }
 
+inline void Server::set_file_request_handler(Handler handler) {
+  file_request_handler_ = handler;
+}
+
 inline void Server::set_error_handler(Handler handler) {
   error_handler_ = handler;
 }
@@ -2419,6 +2425,9 @@ inline bool Server::handle_file_request(Request &req, Response &res) {
       auto type = detail::find_content_type(path);
       if (type) { res.set_header("Content-Type", type); }
       res.status = 200;
+      if (file_request_handler_) {
+        file_request_handler_(req, res);
+      }
       return true;
     }
   }
@@ -3362,6 +3371,7 @@ SSLClient::verify_host_with_subject_alt_name(X509 *server_cert) const {
   struct in_addr addr;
   size_t addr_len = 0;
 
+#ifndef __MINGW32__
   if (inet_pton(AF_INET6, host_.c_str(), &addr6)) {
     type = GEN_IPADD;
     addr_len = sizeof(struct in6_addr);
@@ -3369,6 +3379,7 @@ SSLClient::verify_host_with_subject_alt_name(X509 *server_cert) const {
     type = GEN_IPADD;
     addr_len = sizeof(struct in_addr);
   }
+#endif
 
   auto alt_names = static_cast<const struct stack_st_GENERAL_NAME *>(
       X509_get_ext_d2i(server_cert, NID_subject_alt_name, nullptr, nullptr));
