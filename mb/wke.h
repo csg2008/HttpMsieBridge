@@ -146,6 +146,40 @@ typedef struct _wkeViewSettings {
 
 typedef void* wkeWebFrameHandle;
 
+typedef struct _wkeGeolocationPosition{
+    double timestamp;
+    double latitude;
+    double longitude;
+    double accuracy;
+    bool providesAltitude;
+    double altitude;
+    bool providesAltitudeAccuracy;
+    double altitudeAccuracy;
+    bool providesHeading;
+    double heading;
+    bool providesSpeed;
+    double speed;
+
+#if defined(__cplusplus)
+    _wkeGeolocationPosition(const _wkeGeolocationPosition& other)
+    {
+        timestamp = other.timestamp;
+        latitude = other.latitude;
+        longitude = other.longitude;
+        accuracy = other.accuracy;
+        providesAltitude = other.providesAltitude;
+        altitude = other.altitude;
+        providesAltitudeAccuracy = other.providesAltitudeAccuracy;
+        altitudeAccuracy = other.altitudeAccuracy;
+        providesHeading = other.providesHeading;
+        heading = other.heading;
+        providesSpeed = other.providesSpeed;
+        speed = other.speed;
+    }
+#endif
+
+} wkeGeolocationPosition;
+
 typedef enum _wkeMenuItemId {
     kWkeMenuSelectedAllId = 1 << 1,
     kWkeMenuSelectedTextId = 1 << 2,
@@ -457,6 +491,8 @@ typedef void(WKE_CALL_TYPE*wkeOnPluginFindCallback)(wkeWebView webView, void* pa
 
 typedef void(WKE_CALL_TYPE*wkeOnPrintCallback)(wkeWebView webView, void* param, wkeWebFrameHandle frameId, void* printParams);
 typedef void(WKE_CALL_TYPE*wkeOnScreenshot)(wkeWebView webView, void* param, const char* data, size_t size);
+
+typedef wkeString(WKE_CALL_TYPE*wkeImageBufferToDataURL)(wkeWebView webView, void* param, const char* data, size_t size);
 
 typedef struct _wkeMediaLoadInfo {
     int size;
@@ -1085,10 +1121,13 @@ public:
     ITERATOR1(const wchar_t*, wkeGetStringW, const wkeString string, "") \
     \
     ITERATOR3(void, wkeSetString, wkeString string, const utf8* str, size_t len, "") \
+    ITERATOR3(void, wkeSetStringWithoutNullTermination, wkeString string, const utf8* str, size_t len, "") \
     ITERATOR3(void, wkeSetStringW, wkeString string, const wchar_t* str, size_t len, "") \
     \
     ITERATOR2(wkeString, wkeCreateString, const utf8* str, size_t len, "") \
     ITERATOR2(wkeString, wkeCreateStringW, const wchar_t* str, size_t len, "") \
+    ITERATOR2(wkeString, wkeCreateStringWithoutNullTermination, const utf8* str, size_t len, "") \
+    ITERATOR1(size_t, wkeGetStringLen, wkeString str, "") \
     ITERATOR1(void, wkeDeleteString, wkeString str, "") \
     \
     ITERATOR0(wkeWebView, wkeGetWebViewForCurrentContext, "") \
@@ -1154,6 +1193,7 @@ public:
     ITERATOR1(void, wkeNetContinueJob, wkeNetJob jobPtr, "")\
     ITERATOR1(const char*, wkeNetGetUrlByJob, wkeNetJob jobPtr, "")\
     ITERATOR1(const wkeSlist*, wkeNetGetRawHttpHead, wkeNetJob jobPtr, "")\
+    ITERATOR1(const wkeSlist*, wkeNetGetRawResponseHead, wkeNetJob jobPtr, "")\
     \
     ITERATOR1(void, wkeNetCancelRequest, wkeNetJob jobPtr, "")\
     ITERATOR1(BOOL, wkeNetHoldJobToAsynCommit, wkeNetJob jobPtr, "")\
@@ -1217,6 +1257,10 @@ public:
     \
     ITERATOR4(void, wkeOnPluginFind, wkeWebView webView, const char* mime, wkeOnPluginFindCallback callback, void* param, "") \
     ITERATOR4(void, wkeAddNpapiPlugin, wkeWebView webView, void* initializeFunc, void* getEntryPointsFunc, void* shutdownFunc, "") \
+    \
+    ITERATOR4(void, wkePluginListBuilderAddPlugin, void* builder, const utf8* name, const utf8* description, const utf8* fileName, "") \
+    ITERATOR3(void, wkePluginListBuilderAddMediaTypeToLastPlugin, void* builder, const utf8* name, const utf8* description, "") \
+    ITERATOR2(void, wkePluginListBuilderAddFileExtensionToLastMediaType, void* builder, const utf8* fileExtension, "") \
     \
     ITERATOR1(wkeWebView, wkeGetWebViewByNData, void* ndata, "") \
     \
