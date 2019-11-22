@@ -4,12 +4,11 @@
 
 #include "defines.h"
 #include <windows.h>
+#include <crtdbg.h> // _ASSERT() macro
 #include "misc/logger.h"
 #include "settings.h"
 #include "window_utils.h"
 #include "resource.h"
-
-extern HINSTANCE g_hInstance;
 
 HWND CreateMainWindow(HINSTANCE hInstance, int nCmdShow, std::string title, LPCWSTR windowClassName, WNDPROC winProc) {
     nlohmann::json* appSettings = GetApplicationSettings();
@@ -163,7 +162,7 @@ HWND CreatePopupWindow(HWND parentHandle) {
     // CW_USEDEFAULT cannot be used with WS_POPUP.
     HWND hwnd = CreateWindowEx(0, CLASS_NAME_EX, 0, WS_OVERLAPPEDWINDOW,
             CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-            parentHandle, 0, g_hInstance, 0);
+            0, 0, 0, 0);
     _ASSERT(hwnd);
     if (center_relative_to_parent) {
         // This won't work properly as real width/height is set later
