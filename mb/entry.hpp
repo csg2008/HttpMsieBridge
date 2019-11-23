@@ -1,4 +1,7 @@
-#include <windows.h>
+#ifndef _MINIBLINK_CXX_EXAMPLE_ENTRY_H
+#define _MINIBLINK_CXX_EXAMPLE_ENTRY_H
+
+
 #include <map>
 #include <string>
 #include "bind.h"
@@ -7,21 +10,8 @@
 
 using namespace miniblink_cxx_example;
 
-std::map<std::string, Window*> g_mb;
+//std::map<std::string, Window*> g_mb;
 
-int mb_open(const wchar_t *url) {
-    if (!wkeInitialize()) {
-        return 1;
-    }
+int mb_open(const wchar_t *url);
 
-    Window window(WKE_WINDOW_TYPE_POPUP, NULL, 800, 600);
-    bind("add", [&window](int a, int b) {
-        window.call("setValue", a + b);
-    });
-    //window.load(L"app:///index.html");
-    window.load(url);
-    window.set_quit_on_close();
-    window.show();
-
-    return 0;
-}
+#endif  // _MINIBLINK_CXX_EXAMPLE_ENTRY_H

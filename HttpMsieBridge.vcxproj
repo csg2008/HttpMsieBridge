@@ -265,6 +265,7 @@
     <ClCompile Include="mb\bind.cpp" />
     <ClCompile Include="mb\filesystem.cpp" />
     <ClCompile Include="mb\window.cpp" />
+    <ClCompile Include="mb\entry.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="misc\version.h" />
