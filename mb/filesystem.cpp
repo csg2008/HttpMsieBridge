@@ -1,6 +1,6 @@
 #include "filesystem.h"
 
-namespace miniblink_cxx_example {
+namespace HttpBridge {
 namespace {
 
 class Filesystem {
@@ -29,6 +29,7 @@ function setValue(value) {
   document.getElementById('c').value = value;
 }
 </script>
+<a href='https://www.baidu.com/' target='_blank'>baidu.com</a>
 </body>
 </html>
 )";
@@ -56,4 +57,4 @@ void install_filesystem(wkeWebView webView) {
     wkeOnLoadUrlBegin(webView, &on_load_url_begin, fs);
 }
 
-}  // miniblink_cxx_example
+}  // HttpBridge

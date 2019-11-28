@@ -5,10 +5,10 @@
 #include <map>
 #include <string>
 #include "bind.h"
-#include "window.h"
+#include "CMiniblink.h"
 #include "wke.h"
 
-using namespace miniblink_cxx_example;
+using namespace HttpBridge;
 
 //std::map<std::string, Window*> g_mb;
 

@@ -55,6 +55,7 @@
 #define IDR_MAINAPP                      11127
 #define IDR_MAINTRAY                     11128
 #define IDR_MAINTITLE                    11129
+#define IDR_MAINFRAME                    11131
 #define IDR_MAINWINDOW                   11130
 #define IDR_POPUP_MENU                   11131
 
@@ -65,7 +66,6 @@
 #define IDM_OPEN_NEW_WINDOW              12004
 #define IDM_INTERNET_OPTION              12005
 
-#define IDR_MAINFRAME                    128
 
 // Next default values for new objects
 // 

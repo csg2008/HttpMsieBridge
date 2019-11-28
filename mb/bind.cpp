@@ -2,7 +2,7 @@
 
 #include <unordered_map>
 
-namespace miniblink_cxx_example {
+namespace HttpBridge {
 namespace {
 
 using Callback = std::function<jsValue(jsExecState)>;
@@ -83,4 +83,4 @@ void bind(
     });
 }
 
-}  // namespace miniblink_cxx_example
+}  // namespace HttpBridge

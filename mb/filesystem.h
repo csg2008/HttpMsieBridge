@@ -1,12 +1,8 @@
-#ifndef _MINIBLINK_CXX_EXAMPLE_FILESYSTEM_H
-#define _MINIBLINK_CXX_EXAMPLE_FILESYSTEM_H
-
+#pragma once
 #include "wke.h"
 
-namespace miniblink_cxx_example {
+namespace HttpBridge {
 
 void install_filesystem(wkeWebView webView);
 
-}  // miniblink_cxx_example
-
-#endif  // _MINIBLINK_CXX_EXAMPLE_FILESYSTEM_H
+}  // HttpBridge

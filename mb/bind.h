@@ -1,12 +1,10 @@
-#ifndef _MINIBLINK_CXX_EXAMPLE_BIND_H
-#define _MINIBLINK_CXX_EXAMPLE_BIND_H
-
+#pragma once
 #include <functional>
 #include <string>
 #include <vector>
 #include "wke.h"
 
-namespace miniblink_cxx_example {
+namespace HttpBridge {
 
 class JsValueShim {
 public:
@@ -35,6 +33,4 @@ void bind(
     std::function<void(
         JsValueShim, JsValueShim, JsValueShim, JsValueShim)> callback);
 
-}  // namespace miniblink_cxx_example
-
-#endif  // _MINIBLINK_CXX_EXAMPLE_BIND_H
+}  // namespace HttpBridge

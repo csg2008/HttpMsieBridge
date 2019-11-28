@@ -264,7 +264,8 @@
     <ClCompile Include="msie\service_provider.cpp" />
     <ClCompile Include="mb\bind.cpp" />
     <ClCompile Include="mb\filesystem.cpp" />
-    <ClCompile Include="mb\window.cpp" />
+    <ClCompile Include="mb\CMiniblink.cpp" />
+    <ClCompile Include="mb\utility.cpp" />
     <ClCompile Include="mb\entry.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -302,8 +303,9 @@
     <ClInclude Include="msie\external_dispatch.h" />
     <ClInclude Include="msie\service_provider.h" />
     <ClInclude Include="mb\bind.h" />
+    <ClInclude Include="mb\utility.h" />
     <ClInclude Include="mb\filesystem.h" />
-    <ClInclude Include="mb\window.h" />
+    <ClInclude Include="mb\CMiniblink.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="before_release.txt" />
