@@ -248,7 +248,7 @@ bool BrowserWindow::CreateBrowserControl(std::string url) {
         return false;
     }
 
-    bool hide_dialog_boxes = (*settings)["bridge"]["msie"]["hide_dialog_boxes"];
+    bool hide_dialog_boxes = (*settings)["msie"]["hide_dialog_boxes"];
     if (hide_dialog_boxes) {
         hr = webBrowser2_->put_Silent(VARIANT_TRUE);
         if (FAILED(hr)) {
@@ -983,7 +983,7 @@ bool BrowserWindow::IsPopup() {
 bool BrowserWindow::IsUsingMetaTitle() {
     if (IsPopup()) {
         nlohmann::json* settings = GetApplicationSettings();
-        return !(*settings)["bridge"]["window"]["fixed_title"].is_string() || (*settings)["bridge"]["window"]["fixed_title"].get<std::string>().empty();
+        return !(*settings)["window"]["fixed_title"].is_string() || (*settings)["window"]["fixed_title"].get<std::string>().empty();
     }
     return false;
 }
@@ -995,10 +995,10 @@ void BrowserWindow::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 void BrowserWindow::OnGetMinMaxInfo(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     if (!IsPopup()) {
         nlohmann::json* settings = GetApplicationSettings();
-        static long minimum_width = (*settings)["bridge"]["window"]["minimum_size"][0];
-        static long minimum_height = (*settings)["bridge"]["window"]["minimum_size"][1];
-        static long maximum_width = (*settings)["bridge"]["window"]["maximum_size"][0];
-        static long maximum_height = (*settings)["bridge"]["window"]["maximum_size"][1];
+        static long minimum_width = (*settings)["window"]["minimum_size"][0];
+        static long minimum_height = (*settings)["window"]["minimum_size"][1];
+        static long maximum_width = (*settings)["window"]["maximum_size"][0];
+        static long maximum_height = (*settings)["window"]["maximum_size"][1];
         MINMAXINFO* pMMI = (MINMAXINFO*)lParam;
         if (minimum_width)
             pMMI->ptMinTrackSize.x = minimum_width;
@@ -1089,9 +1089,9 @@ void BrowserWindow::SetLeft(long newLeft) {
 void BrowserWindow::SetTitleFromSettings() {
     if (IsPopup()) {
         nlohmann::json* settings = GetApplicationSettings();
-        std::string popup_title = (*settings)["bridge"]["window"]["popup_title"];
+        std::string popup_title = (*settings)["window"]["popup_title"];
         if (popup_title.empty())
-            popup_title = (*settings)["bridge"]["window"]["title"];
+            popup_title = (*settings)["window"]["title"];
         if (popup_title.empty())
             popup_title = GetExecutableName();
         SetTitle(Utf8ToWide(popup_title).c_str());
@@ -1102,9 +1102,9 @@ void BrowserWindow::SetIconFromSettings() {
     nlohmann::json* settings = GetApplicationSettings();
     std::string iconPath;
     if (IsPopup())
-        iconPath = (*settings)["bridge"]["window"]["popup_icon"];
+        iconPath = (*settings)["window"]["popup_icon"];
     else
-        iconPath = (*settings)["bridge"]["window"]["icon"];
+        iconPath = (*settings)["window"]["icon"];
     if (!iconPath.empty()) {
         wchar_t iconPathW[MAX_PATH];
         Utf8ToWide(iconPath.c_str(), iconPathW, _countof(iconPathW));
@@ -1272,7 +1272,7 @@ bool BrowserWindow::DisplayHtmlString(const wchar_t* htmlString) {
 }
 bool BrowserWindow::DisplayErrorPage(const wchar_t* navigateUrl, int statusCode) {
     nlohmann::json* settings = GetApplicationSettings();
-    std::string error_page = (*settings)["bridge"]["msie"]["error_page"];
+    std::string error_page = (*settings)["msie"]["error_page"];
     if (error_page.empty())
         return false;
     std::string htmlFile = GetExecutableDirectory() + "\\" + error_page;

@@ -243,7 +243,7 @@ HRESULT STDMETHODCALLTYPE BrowserEvents2::Invoke(
         _bstr_t bstrUrl;
         _bstr_t bstrMime;
         _bstr_t bstrCharset;
-        std::string callback = (*settings)["bridge"]["integration"]["callback"];
+        std::string callback = (*settings)["integration"]["callback"];
 
         if (browserWindow_ -> GetURL(bstrUrl.GetAddress()) && browserWindow_ -> GetMime(bstrMime.GetAddress()) && browserWindow_ -> GetCharset(bstrCharset.GetAddress())) {
             std::string url(bstrUrl);

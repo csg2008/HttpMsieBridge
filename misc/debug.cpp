@@ -74,7 +74,7 @@ LONG WINAPI ExceptionFilter(LPEXCEPTION_POINTERS lpExceptionInfo) {
 
 void FatalError(HWND hwnd, std::string message) {
     nlohmann::json* settings = GetApplicationSettings();
-    std::string title = (*settings)["bridge"]["window"]["title"];
+    std::string title = (*settings)["window"]["title"];
     if (title.empty()) {
         title = GetExecutableName();
     }

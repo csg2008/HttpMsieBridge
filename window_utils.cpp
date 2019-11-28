@@ -12,13 +12,13 @@
 
 HWND CreateMainWindow(HINSTANCE hInstance, int nCmdShow, std::string title, LPCWSTR windowClassName, WNDPROC winProc) {
     nlohmann::json* appSettings = GetApplicationSettings();
-    int default_width = (*appSettings)["bridge"]["window"]["default_size"][0];
-    int default_height = (*appSettings)["bridge"]["window"]["default_size"][1];
-    bool disable_maximize_button = (*appSettings)["bridge"]["window"]["disable_maximize_button"];
-    bool center_on_screen = (*appSettings)["bridge"]["window"]["center_on_screen"];
-    bool dpi_aware = (*appSettings)["bridge"]["window"]["dpi_aware"];
-    bool start_maximized = (*appSettings)["bridge"]["window"]["start_maximized"];
-    bool always_on_top = (*appSettings)["bridge"]["window"]["always_on_top"];
+    int default_width = (*appSettings)["window"]["default_size"][0];
+    int default_height = (*appSettings)["window"]["default_size"][1];
+    bool disable_maximize_button = (*appSettings)["window"]["disable_maximize_button"];
+    bool center_on_screen = (*appSettings)["window"]["center_on_screen"];
+    bool dpi_aware = (*appSettings)["window"]["dpi_aware"];
+    bool start_maximized = (*appSettings)["window"]["start_maximized"];
+    bool always_on_top = (*appSettings)["window"]["always_on_top"];
 
     if (default_width && default_height) {
         if (dpi_aware) {
@@ -156,7 +156,7 @@ void GetDpiAwareWindowSize(int* width, int* height) {
 
 HWND CreatePopupWindow(HWND parentHandle) {
     nlohmann::json* settings = GetApplicationSettings();
-    bool center_relative_to_parent = (*settings)["bridge"]["window"]["center_relative_to_parent"];
+    bool center_relative_to_parent = (*settings)["window"]["center_relative_to_parent"];
 
     // Title will be set in BrowserWindow::BrowserWindow().
     // CW_USEDEFAULT cannot be used with WS_POPUP.

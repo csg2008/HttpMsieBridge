@@ -51,8 +51,8 @@ NOTIFYICONDATA GetTrayData(HWND hwnd) {
         return tray;
     }
     nlohmann::json* appSettings = GetApplicationSettings();
-    std::string main_window_title = (*appSettings)["bridge"]["window"]["title"];
-    std::string startup_to_tray_message = (*appSettings)["bridge"]["window"]["startup_to_tray_message"];
+    std::string main_window_title = (*appSettings)["window"]["title"];
+    std::string startup_to_tray_message = (*appSettings)["window"]["startup_to_tray_message"];
     tray.cbSize = sizeof(tray);
     tray.uID = 1;
     tray.uTimeout = 1000;
@@ -96,10 +96,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
     // Settings
     nlohmann::json* appSettings = GetApplicationSettings();
-    std::string title = (*appSettings)["bridge"]["window"]["title"];
-    std::string homepage = (*appSettings)["bridge"]["integration"]["homepage"];
+    std::string title = (*appSettings)["window"]["title"];
+    std::string homepage = (*appSettings)["integration"]["homepage"];
 
-    bool minimize_to_tray = (*appSettings)["bridge"]["window"]["minimize_to_tray"];
+    bool minimize_to_tray = (*appSettings)["window"]["minimize_to_tray"];
     if (g_windowCount > 1) {
         minimize_to_tray = false;
     }
@@ -134,7 +134,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 ShowWindow(hwnd, SW_MINIMIZE);
                 Sleep(200);
                 ShowWindow(hwnd, SW_HIDE);
-                ShowTrayTip(hwnd, (*appSettings)["bridge"]["window"]["minimize_to_tray_message"].get<std::string>(), 0);
+                ShowTrayTip(hwnd, (*appSettings)["window"]["minimize_to_tray_message"].get<std::string>(), 0);
                 break;
             } else {
                 return DefWindowProc(hwnd, uMsg, wParam, lParam);
@@ -152,11 +152,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             } else if (lParam == WM_RBUTTONDOWN) {
 				POINT pt;
                 GetCursorPos(&pt);
- 
 				SetForegroundWindow(hwnd);
 
-				//EnableMenuItem(hTrayMenu, ID_SHOW, MF_GRAYED);	
- 
 				int cmd = ::TrackPopupMenu(::GetSubMenu(hTrayMenu, 0), TPM_RETURNCMD, pt.x, pt.y, NULL, hwnd, NULL);
                 if (cmd == IDM_ABOUT) {
                     MessageBox(NULL, L"welcome to use http mise bridge\nwebsite: http://github.com/csg800", ConvertW(title.c_str()), MB_OK | MB_ICONINFORMATION);
@@ -280,9 +277,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrCm
     nlohmann::json* settings = GetApplicationSettings();
 
     // Debugging options.
-    bool show_console = (*settings)["bridge"]["logger"]["show_console"];
-    std::string log_level = (*settings)["bridge"]["logger"]["log_level"];
-    std::string log_file = (*settings)["bridge"]["logger"]["log_file"];
+    bool show_console = (*settings)["integration"]["show_console"];
+    std::string log_level = (*settings)["integration"]["log_level"];
+    std::string log_file = (*settings)["integration"]["log_file"];
     if (log_file.length()) {
         if (std::string::npos == log_file.find(":")) {
             log_file = GetExecutableDirectory() + "\\" + log_file;
@@ -331,7 +328,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrCm
     }
 
     // startup spec application
-    std::string startup = (*settings)["bridge"]["integration"]["startup"];
+    std::string startup = (*settings)["integration"]["startup"];
     if ("" != startup) {
         shellInfo = &exec(startup, 3, false);
 
@@ -342,13 +339,13 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrCm
     }
  
     // Main window title option.
-    std::string main_window_title = (*settings)["bridge"]["window"]["title"];
+    std::string main_window_title = (*settings)["window"]["title"];
     if (main_window_title.empty()) {
         main_window_title = GetExecutableName();
     }
 
     // Single instance guid option.
-    const bool instance = (*settings)["bridge"]["window"]["instance"];
+    const bool instance = (*settings)["window"]["instance"];
     if (instance) {
         g_Instance.Initialize(CLASS_NAME_EX);
 	    if (g_Instance.IsRunning()) {

@@ -37,7 +37,7 @@ HRESULT STDMETHODCALLTYPE DocHostShowUi::ShowMessage(
 
     // See also webBrowser2_->put_Silent().
     nlohmann::json* settings = GetApplicationSettings();
-    bool hide_dialog_boxes = (*settings)["bridge"]["msie"]["hide_dialog_boxes"];
+    bool hide_dialog_boxes = (*settings)["msie"]["hide_dialog_boxes"];
     if (hide_dialog_boxes)
         return S_OK;
 

@@ -379,12 +379,12 @@ bool StartWebServer() {
     nlohmann::json* appSettings = GetApplicationSettings();
 
     // 404_handler
-    std::string _404_handler = (*appSettings)["bridge"]["http"]["404_handler"];
+    std::string _404_handler = (*appSettings)["integration"]["404_handler"];
 
     // Index files from settings.
     std::size_t cnt;
     std::string indexFiles;
-    const nlohmann::json indexFilesArray = (*appSettings)["bridge"]["http"]["index"];
+    const nlohmann::json indexFilesArray = (*appSettings)["integration"]["index"];
 
     cnt = indexFilesArray.size();
     for (std::size_t i = 0; i < cnt; i++) {
@@ -402,7 +402,7 @@ bool StartWebServer() {
 
     // Hide files patterns.
     std::string hide_files_patterns = "";
-    const nlohmann::json hide_files = (*appSettings)["bridge"]["http"]["hides"];
+    const nlohmann::json hide_files = (*appSettings)["integration"]["hides"];
 
     cnt = hide_files.size();
     for (std::size_t i = 0; i < cnt; i++) {
@@ -418,10 +418,10 @@ bool StartWebServer() {
     // Ip address and port. If port was set to 0, then real port
     // will be known only after the webserver was started.
     int portInt = 0;
-    if ((*appSettings)["bridge"]["http"]["listen"].is_string()) {
-        portInt = (int) atoi((*appSettings)["bridge"]["http"]["listen"].get<std::string>().c_str());
-    } else if ((*appSettings)["bridge"]["http"]["listen"].is_number()) {
-        portInt = (*appSettings)["bridge"]["http"]["listen"];
+    if ((*appSettings)["integration"]["listen"].is_string()) {
+        portInt = (int) atoi((*appSettings)["integration"]["listen"].get<std::string>().c_str());
+    } else if ((*appSettings)["integration"]["listen"].is_number()) {
+        portInt = (*appSettings)["integration"]["listen"];
     }
     if (0 == portInt) {
         portInt = 8080;

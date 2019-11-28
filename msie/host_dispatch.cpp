@@ -102,7 +102,7 @@ HRESULT STDMETHODCALLTYPE HostDispatch::Invoke(
     pExcepInfo = 0;
     puArgErr = 0;
     nlohmann::json* settings = GetApplicationSettings();
-    bool silent_operations = (*settings)["bridge"]["msie"]["silent_operations"];
+    bool silent_operations = (*settings)["msie"]["silent_operations"];
 
     // DLCTL_* constants:
     // http://msdn.microsoft.com/en-us/library/aa741313(v=vs.85).aspx

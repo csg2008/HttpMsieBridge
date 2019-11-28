@@ -39,7 +39,7 @@ HRESULT STDMETHODCALLTYPE DocHostUiHandler::ShowContextMenu(
         /* [in] */ IDispatch *pdispReserved) {
     // If desired, we can pop up our own custom context menu here.
     nlohmann::json* settings = GetApplicationSettings();
-    bool show_context_menu = (*settings)["bridge"]["msie"]["show_context_menu"];
+    bool show_context_menu = (*settings)["msie"]["show_context_menu"];
 
     // We could allow context menu on text selection, but
     // it also displays Print/Print preview options.
@@ -60,14 +60,14 @@ HRESULT STDMETHODCALLTYPE DocHostUiHandler::ShowContextMenu(
 HRESULT STDMETHODCALLTYPE DocHostUiHandler::GetHostInfo(
         /* [out][in] */ DOCHOSTUIINFO *pInfo) {
     nlohmann::json* settings = GetApplicationSettings();
-    bool use_themes = (*settings)["bridge"]["msie"]["use_themes"];
+    bool use_themes = (*settings)["msie"]["use_themes"];
     bool windowed_select_control =
-            (*settings)["bridge"]["msie"]["windowed_select_control"];
-    bool disable_scrollbars = (*settings)["bridge"]["msie"]["disable_scrollbars"];
-    bool flat_scrollbars = (*settings)["bridge"]["msie"]["flat_scrollbars"];
-    bool utf8_url_encoding = (*settings)["bridge"]["msie"]["utf8_url_encoding"];
-    bool autocomplete_forms = (*settings)["bridge"]["msie"]["autocomplete_forms"];
-    bool dpi_aware = (*settings)["bridge"]["window"]["dpi_aware"];
+            (*settings)["msie"]["windowed_select_control"];
+    bool disable_scrollbars = (*settings)["msie"]["disable_scrollbars"];
+    bool flat_scrollbars = (*settings)["msie"]["flat_scrollbars"];
+    bool utf8_url_encoding = (*settings)["msie"]["utf8_url_encoding"];
+    bool autocomplete_forms = (*settings)["msie"]["autocomplete_forms"];
+    bool dpi_aware = (*settings)["window"]["dpi_aware"];
 
     pInfo->cbSize = sizeof(DOCHOSTUIINFO);
     // PICS = Platform for Internet Content Selection.
@@ -190,7 +190,7 @@ HRESULT STDMETHODCALLTYPE DocHostUiHandler::TranslateAccelerator(
     }
 
     if (lpMsg->message == WM_KEYDOWN && lpMsg->wParam == VK_F5) {
-        bool enable_f5_refresh = (*settings)["bridge"]["msie"]["enable_f5_refresh"];
+        bool enable_f5_refresh = (*settings)["msie"]["enable_f5_refresh"];
         if (enable_f5_refresh)
             hr = S_FALSE;
         else
@@ -250,9 +250,9 @@ HRESULT STDMETHODCALLTYPE DocHostUiHandler::GetOptionKeyPath(
     if (!pchKey)
 	    return E_INVALIDARG;
     nlohmann::json* settings = GetApplicationSettings();
-    bool smooth_scroll = (*settings)["bridge"]["msie"]["smooth_scroll"];
+    bool smooth_scroll = (*settings)["msie"]["smooth_scroll"];
     bool disable_script_debugger =
-            (*settings)["bridge"]["msie"]["disable_script_debugger"];
+            (*settings)["msie"]["disable_script_debugger"];
 
     // Gets a registry subkey path that overrides the
     // default Windows Internet Explorer registry settings.
