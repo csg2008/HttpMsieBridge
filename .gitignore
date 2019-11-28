@@ -1,6 +1,7 @@
 Release/
 Debug/
 x64/
+Bin/
 ipch/
 .vs/
 *.ncb
@@ -15,7 +16,8 @@ ipch/
 *.dll
 *.exe
 *.lib
-debug.log
+*.pdb
+*.log
 php/*.bat
 php/*.phar
 php/*.gif
