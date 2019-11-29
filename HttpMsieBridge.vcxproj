@@ -235,7 +235,7 @@
     <ClCompile Include="misc\string_utils.cpp" />
     <ClCompile Include="misc\version.cpp" />
     <ClCompile Include="web_server.cpp" />
-    <ClCompile Include="window_utils.cpp" />
+    <ClCompile Include="msie\msie.cpp" />
     <ClCompile Include="msie\registry.cpp" />
     <ClCompile Include="msie\click_events.cpp" />
     <ClCompile Include="msie\host_dispatch.cpp" />
@@ -255,7 +255,7 @@
     <ClCompile Include="mb\filesystem.cpp" />
     <ClCompile Include="mb\CMiniblink.cpp" />
     <ClCompile Include="mb\utility.cpp" />
-    <ClCompile Include="mb\entry.cpp" />
+    <ClCompile Include="mb\mb.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="misc\version.h" />
@@ -270,7 +270,7 @@
     <ClInclude Include="misc\instance.h" />
     <ClInclude Include="misc\string_utils.h" />
     <ClInclude Include="web_server.h" />
-    <ClInclude Include="window_utils.h" />
+    <ClInclude Include="msie\msie.h" />
     <ClInclude Include="msie\version.h" />
     <ClInclude Include="msie\registry.h" />
     <ClInclude Include="msie\com_utils.h" />

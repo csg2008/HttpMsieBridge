@@ -2,13 +2,14 @@
 // License: New BSD License.
 // Website: http://code.google.com/p/phpdesktop/
 
-#include "defines.h"
+#include "../defines.h"
 #include <windows.h>
 #include <crtdbg.h> // _ASSERT() macro
 #include "misc/logger.h"
-#include "settings.h"
-#include "window_utils.h"
-#include "resource.h"
+#include "../resource.h"
+#include "../settings.h"
+#include "msie.h"
+
 
 HWND CreateMainWindow(HINSTANCE hInstance, int nCmdShow, std::string title, LPCWSTR windowClassName, WNDPROC winProc) {
     nlohmann::json* appSettings = GetApplicationSettings();
@@ -160,9 +161,7 @@ HWND CreatePopupWindow(HWND parentHandle) {
 
     // Title will be set in BrowserWindow::BrowserWindow().
     // CW_USEDEFAULT cannot be used with WS_POPUP.
-    HWND hwnd = CreateWindowEx(0, CLASS_NAME_EX, 0, WS_OVERLAPPEDWINDOW,
-            CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-            0, 0, 0, 0);
+    HWND hwnd = CreateWindowEx(0, CLASS_NAME_MSIE_EX, 0, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, 0, 0);
     _ASSERT(hwnd);
     if (center_relative_to_parent) {
         // This won't work properly as real width/height is set later

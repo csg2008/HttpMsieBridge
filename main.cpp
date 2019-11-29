@@ -11,6 +11,7 @@
 #include "misc/logger.h"
 #include "misc/file_utils.h"
 #include "misc/debug.h"
+#include "msie/msie.h"
 #include "msie/internet_features.h"
 #include "msie/browser_window.h"
 #include "settings.h"
@@ -18,7 +19,6 @@
 #include "misc/version.h"
 #include "misc/string_utils.h"
 #include "web_server.h"
-#include "window_utils.h"
 
 #pragma comment(lib,"winmm.lib")
 
@@ -347,9 +347,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrCm
     // Single instance guid option.
     const bool instance = (*settings)["window"]["instance"];
     if (instance) {
-        g_Instance.Initialize(CLASS_NAME_EX);
+        g_Instance.Initialize(CLASS_NAME_MSIE_EX);
 	    if (g_Instance.IsRunning()) {
-            HWND hwnd = FindWindow(CLASS_NAME_EX, NULL);
+            HWND hwnd = FindWindow(CLASS_NAME_MSIE_EX, NULL);
             if (hwnd) {
                 if (IsIconic(hwnd)){
                     ShowWindow(hwnd, SW_RESTORE);
@@ -376,7 +376,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrCm
     SetInternetFeatures();
     
     hTrayMenu = LoadMenu(GetModuleHandle(0), MAKEINTRESOURCE(IDR_POPUP_MENU));
-    g_hwnd = CreateMainWindow(hInstance, nCmdShow, main_window_title, CLASS_NAME_EX, WindowProc);
+    g_hwnd = CreateMainWindow(hInstance, nCmdShow, main_window_title, CLASS_NAME_MSIE_EX, WindowProc);
     Shell_NotifyIcon(NIM_ADD, &GetTrayData(g_hwnd));
 
     HACCEL  hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDR_MAINFRAME));

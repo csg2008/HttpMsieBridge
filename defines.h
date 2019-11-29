@@ -4,8 +4,11 @@
 
 #pragma once
 
-// window class name
-#define CLASS_NAME_EX L"HTTP_MSIE_BRIDGE"
+// MSIE window class name
+#define CLASS_NAME_MSIE_EX L"HTTP_MSIE_BRIDGE"
+
+// MSIE window class name
+#define CLASS_NAME_MB_EX L"HTTP_MSIE_BRIDGE"
 
 // Win messages
 #define WM_TRAY_MESSAGE (WM_USER + 1)

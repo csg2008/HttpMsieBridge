@@ -12,7 +12,7 @@
 #include "CMiniblink.h"
 #include "wke.h"
 #include "../resource.h"
-#include "entry.hpp"
+#include "mb.hpp"
 
 
 

@@ -20,7 +20,7 @@
 #include "3rd/json.hpp"
 #include "../settings.h"
 #include "misc/string_utils.h"
-#include "../window_utils.h"
+#include "msie.h"
 #include "../resource.h"
 
 BrowserEvents2::BrowserEvents2(BrowserWindow* inBrowserWindow)

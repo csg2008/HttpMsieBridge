@@ -34,7 +34,7 @@
 #include "../settings.h"
 #include "misc/string_utils.h"
 #include "misc/file_utils.h"
-#include "../window_utils.h"
+#include "msie.h"
 
 #define EXTERNAL_CLOSE_WINDOW           1
 
@@ -214,7 +214,7 @@ bool BrowserWindow::CreateBrowserControl(std::string url) {
         return false;
     }
 
-    hr = oleObject_->SetHostNames(CLASS_NAME_EX, 0);
+    hr = oleObject_->SetHostNames(CLASS_NAME_MSIE_EX, 0);
     if (FAILED(hr)) {
         LOG_ERROR << "BrowserWindow::CreateBrowserControl() failed: IOleObject->SetHostNames() failed";
         _ASSERT(false);

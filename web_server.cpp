@@ -25,7 +25,7 @@
 #include "misc/string_utils.h"
 #include "msie/browser_window.h"
 #include "misc/version.h"
-#include "mb/entry.hpp"
+#include "mb/mb.hpp"
 
 using namespace httplib;
 

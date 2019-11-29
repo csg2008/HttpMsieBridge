@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "defines.h"
+#include "../defines.h"
 #include <windows.h>
 #include <string>
 
