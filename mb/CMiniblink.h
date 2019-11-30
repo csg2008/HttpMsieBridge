@@ -4,7 +4,7 @@
 #include <functional>
 #include <string>
 #include "wke.h"
-
+#include "3rd/json.hpp"
 
 namespace HttpBridge {
 	enum JS_RESULT_TYPE {
@@ -140,9 +140,10 @@ namespace HttpBridge {
 	};
 	class CMiniblink {
 	public:
-		CMiniblink();
-		CMiniblink(wkeWebView mbWebView);
-		CMiniblink(wkeWindowType type, HWND parent_hwnd, int width, int height);
+		CMiniblink() = delete;
+	    CMiniblink(const CMiniblink &) = delete;
+    	CMiniblink &operator=(const CMiniblink &) = delete;
+		CMiniblink(HINSTANCE hInstance, nlohmann::json* setting);
 		~CMiniblink();
 
 	public:
@@ -172,7 +173,6 @@ namespace HttpBridge {
 		virtual void OnMediaLoad(const char* url, wkeMediaLoadInfo* info);
 		virtual void OnLoadingFinish(LPCWSTR url, wkeLoadingResult result, LPCWSTR failedReason);
 	public:
-		static void Initialize();
 		static void SetWkeDllPath(LPCTSTR dllPath);
 		static void SetGlobalProxy(const wkeProxy* proxy);
 		static UINT GetRunJsMessageId();
@@ -256,8 +256,6 @@ namespace HttpBridge {
 		void minimize() { ShowWindow(GetHWND(), SW_MINIMIZE); }
 		void enable() { wkeEnableWindow(m_wkeWebView, true); }
 		void disable() { wkeEnableWindow(m_wkeWebView, false); }
-		void clear_quit_on_close() { quit_on_close_ = false; }
-		void set_quit_on_close() { quit_on_close_ = true; }
 		void close() { PostMessageW(GetHWND(), WM_CLOSE, 0, 0); }
 
 		HWND GetHWND() const { return wkeGetWindowHandle(m_wkeWebView); }
@@ -292,10 +290,10 @@ namespace HttpBridge {
 		static void onDataFinish(void* ptr, wkeNetJob job, wkeLoadingResult result);
 		void updateCursor();
 	private:
+		nlohmann::json* settings = NULL; 
 		wkeWebView m_wkeWebView = NULL;
-		int m_cursor;
 		bool m_released = false;
-		bool quit_on_close_ = false;
+		int m_cursor;
 	};
 
 	jsValue to_js_value(jsExecState, bool value);

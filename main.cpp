@@ -404,19 +404,11 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrCm
             return 1;
         }
 
-        window = new HttpBridge::CMiniblink(WKE_WINDOW_TYPE_POPUP, NULL, 800, 600);
-        HttpBridge::bind("add", [window](int a, int b) {
-            window->call("setValue", a + b);
-        });
+        window = new HttpBridge::CMiniblink(hInstance, settings);
         window->load(char_to_wchar(homepage.c_str()));
-        window->set_quit_on_close();
         window->show();
 
         g_hwnd = window->GetHWND();
-
-        HICON hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDR_MAINAPP));
-        ::SendMessage(window->GetHWND(), WM_SETICON, ICON_BIG, (LPARAM)hIcon);
-        ::SendMessage(window->GetHWND(), WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
     }
     if (!StartWebServer()) {
         FatalError(NULL, "Could not start internal web server, Exiting application...");

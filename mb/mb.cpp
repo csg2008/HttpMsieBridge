@@ -32,62 +32,10 @@ void setAppIcon(HWND hwnd) {
     }
 }
 
-int APIENTRY wWinMainMB(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow) {
-    UNREFERENCED_PARAMETER(hPrevInstance);
-    UNREFERENCED_PARAMETER(lpCmdLine);
 
-    hInst = hInstance;
-    //myRegisterClass(hInstance);
-    using namespace HttpBridge;
-
-    if (!wkeInitialize()) {
-        return 1;
-    }
-
-    CMiniblink window(WKE_WINDOW_TYPE_POPUP, NULL, 800, 600);
-    bind("add", [&window](int a, int b) {
-        window.call("setValue", a + b);
-    });
-    window.load(L"app:///index.html");
-    window.set_quit_on_close();
-    window.show();
-
-
-    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDR_MAINFRAME));
-
-    HICON hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDR_MAINAPP));
-    ::SendMessage(window.GetHWND(), WM_SETICON, ICON_BIG, (LPARAM)hIcon);
-    ::SendMessage(window.GetHWND(), WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
-
-    MSG msg;
-    int ret;
-    while ((ret = GetMessage(&msg, 0, 0, 0)) != 0 && CMiniblink::counter > 0) {
-        if (ret == -1) {
-            break;
-        } else {
-            if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)) {
-                TranslateMessage(&msg);
-                DispatchMessage(&msg);
-            }
-        }
-    }
-
-    return 0;
-}
 
 int mb_open(const wchar_t *url) {
-    if (!wkeInitialize()) {
-        return 1;
-    }
 
-   CMiniblink window(WKE_WINDOW_TYPE_POPUP, NULL, 800, 600);
-    bind("add", [&window](int a, int b) {
-        window.call("setValue", a + b);
-    });
-    window.load(L"app:///index.html");
-    //window.load(url);
-    window.set_quit_on_close();
-    window.show();
 
     return 0;
 }

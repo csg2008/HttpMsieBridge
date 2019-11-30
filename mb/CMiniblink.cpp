@@ -2,6 +2,8 @@
 #include <cassert>
 #include <utility>
 #include <time.h>
+#include "../resource.h"
+#include "bind.h"
 #include "filesystem.h"
 #include "CMiniblink.h"
 
@@ -37,26 +39,22 @@ namespace HttpBridge {
 		::wkeNetSetData(m_job, buf, len);
 	}
 
-	CMiniblink::CMiniblink() :CMiniblink(NULL) {
+	CMiniblink::CMiniblink(HINSTANCE hInstance, nlohmann::json* setting) :m_cursor(-1), settings(setting) {
+		int width = (*setting)["window"]["default_size"][0];
+    	int height = (*setting)["window"]["default_size"][1];
+		m_wkeWebView = ::wkeCreateWebWindow(WKE_WINDOW_TYPE_POPUP, NULL, 0, 0, width, height);
 
-	}
-	CMiniblink::CMiniblink(wkeWebView mbWebView) : m_cursor(-1)
-	{
-		if (mbWebView != NULL) {
-			m_wkeWebView = mbWebView;
-		} else {
-			Initialize();
-			m_wkeWebView = ::wkeCreateWebWindow(WKE_WINDOW_TYPE_POPUP, NULL, 0, 0, 640, 480);;
-		}
+        HICON hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDR_MAINAPP));
+        ::SendMessage(GetHWND(), WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+        ::SendMessage(GetHWND(), WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
 
 		counter++;
 		DoInit();
 		install_filesystem(m_wkeWebView);
-	}
 
-	CMiniblink::CMiniblink(wkeWindowType type, HWND parent_hwnd, int width, int height) : CMiniblink(wkeCreateWebWindow(type, parent_hwnd, 0, 0, width, height))
-	{
-
+		// bind("add", [this](int a, int b) {
+        //     this->m_wkeWebView->call("setValue", a + b);
+        // });
 	}
 
 	CMiniblink::~CMiniblink()
@@ -93,6 +91,12 @@ namespace HttpBridge {
 	// }
 
 	void CMiniblink::DoInit() {
+		static bool isInitialized = ::wkeIsInitialize==NULL?false:(::wkeIsInitialize());
+		if (!isInitialized) {
+			::wkeInitialize();
+			isInitialized = true;
+		}
+
 		::wkeSetTransparent(m_wkeWebView, false);
 		//::wkeOnPaintUpdated(m_wkeWebView, MBPaintUpdate, this);
 		::wkeSetHandle(m_wkeWebView, GetHWND());
@@ -822,28 +826,15 @@ namespace HttpBridge {
 		::wkePerformCookieCommand(m_wkeWebView, wkeCookieCommand::wkeCookieCommandFlushCookiesToFile);
 	}
 
-	/*静态函数*/
-	void CMiniblink::Initialize()
-	{
-		static bool isInitialized = ::wkeIsInitialize==NULL?false:(::wkeIsInitialize());
-		if (!isInitialized) {
-			::wkeInitialize();
-			isInitialized = true;
-		}
-	}
-
 	void CMiniblink::SetWkeDllPath(LPCTSTR dllPath)
 	{
-		Initialize();
 		::wkeSetWkeDllPath(dllPath);
 	}
 	void CMiniblink::SetGlobalProxy(const wkeProxy* proxy) {
-		Initialize();
 		::wkeSetProxy(proxy);
 	}
 
-	UINT CMiniblink::GetRunJsMessageId()
-	{
+	UINT CMiniblink::GetRunJsMessageId() {
 		static UINT id = ::RegisterWindowMessage(L"MB_JS_EXECUTE");
 		return id;
 	}
