@@ -9,33 +9,26 @@
 
 namespace HttpBridge {
 	CNetJob::CNetJob(wkeNetJob job) :m_job(job) {}
-	void CNetJob::SetHTTPHeaderField(wchar_t * key, wchar_t * value, bool response)
-	{
+	void CNetJob::SetHTTPHeaderField(wchar_t * key, wchar_t * value, bool response) {
 		::wkeNetSetHTTPHeaderField(m_job, key, value, response);
 	}
-	void CNetJob::SetMIMEType(const char * type)
-	{
+	void CNetJob::SetMIMEType(const char * type) {
 		::wkeNetSetMIMEType(m_job, const_cast<char*>(type));
 	}
-	const char * CNetJob::GetMIMEType() const
-	{
+	const char * CNetJob::GetMIMEType() const {
 		return ::wkeNetGetMIMEType(m_job, NULL);
 	}
-	void CNetJob::CancelRequest()
-	{
+	void CNetJob::CancelRequest() {
 		::wkeNetCancelRequest(m_job);
 	}
-	wkeRequestType CNetJob::GetRequestMethod()
-	{
+	wkeRequestType CNetJob::GetRequestMethod() {
 		return ::wkeNetGetRequestMethod(m_job);
 	}
-	wkePostBodyElements * CNetJob::GetPostBody()
-	{
+	wkePostBodyElements * CNetJob::GetPostBody() {
 		return ::wkeNetGetPostBody(m_job);
 	}
 
-	void CNetJob::SetResponseData(void* buf, int len)
-	{
+	void CNetJob::SetResponseData(void* buf, int len) {
 		::wkeNetSetData(m_job, buf, len);
 	}
 
@@ -57,8 +50,7 @@ namespace HttpBridge {
         // });
 	}
 
-	CMiniblink::~CMiniblink()
-	{
+	CMiniblink::~CMiniblink() {
 		counter--;
 		if (!m_released && NULL != m_wkeWebView) {
 			m_released = true;
@@ -70,8 +62,7 @@ namespace HttpBridge {
 		}
 	}
 
-	LPCTSTR CMiniblink::GetClass() const
-	{
+	LPCTSTR CMiniblink::GetClass() const {
 		return L"Miniblink";
 	}
 
@@ -248,8 +239,7 @@ namespace HttpBridge {
 	// 	CControlUI::DoEvent(event);
 	// }
 
-	LRESULT CMiniblink::MessageHandler(UINT uMsg, WPARAM wParam, LPARAM lParam, bool & bHandled)
-	{
+	LRESULT CMiniblink::MessageHandler(UINT uMsg, WPARAM wParam, LPARAM lParam, bool & bHandled) {
 
 		if (uMsg == GetRunJsMessageId()) {
 			bHandled = true;
@@ -261,14 +251,11 @@ namespace HttpBridge {
 			if (arg->frameId == NULL||arg->frameId== (wkeWebFrameHandle)0xcccccccc) {
 				value = ::wkeRunJS(arg->webView, arg->js);
 				es = ::wkeGlobalExec(arg->webView);
-			}
-			else
-			{
+			} else {
 				value = ::wkeRunJsByFrame(arg->webView, arg->frameId, arg->js, true);
 				es = ::wkeGetGlobalExecByFrame(arg->webView,arg->frameId);
 			}
-			switch (arg->type)
-			{
+			switch (arg->type) {
 			case JS_RESULT_TYPE::JS_INT: {
 				int* ret = (int*)arg->result;
 				*ret = jsToInt(es, value);
@@ -302,13 +289,11 @@ namespace HttpBridge {
 				break;
 			}
 			return S_OK;
-		}
-		else if (uMsg == GetActionMessageId()) {
+		} else if (uMsg == GetActionMessageId()) {
 			bHandled = true;
 			wkeWebView web = (wkeWebView)wParam;
 			MB_ACTION_ITEM *action = (MB_ACTION_ITEM *)lParam;
-			switch (action->sender)
-			{
+			switch (action->sender) {
 			case MB_ACTION_SENDER::KEY:
 			{
 				MB_ACTION_KEY_DATA *data = (MB_ACTION_KEY_DATA *)action->data;
@@ -371,94 +356,75 @@ namespace HttpBridge {
 	bool CMiniblink::OnClosing() {
 		return true;
 	}
-	void CMiniblink::OnTitleChanged(LPCWSTR title)
-	{
+	void CMiniblink::OnTitleChanged(LPCWSTR title) {
 		//OutputDebugString(title);
 		wkeSetWindowTitleW(m_wkeWebView, title);
 	}
 
-	void CMiniblink::OnUrlChanged(LPCWSTR url, CWebFrame *frame)
-	{
+	void CMiniblink::OnUrlChanged(LPCWSTR url, CWebFrame *frame) {
 	}
 
-	void CMiniblink::OnAlert(LPCWSTR msg)
-	{
+	void CMiniblink::OnAlert(LPCWSTR msg) {
 		::MessageBox(GetHWND(), msg, L"确定", MB_OK|MB_ICONINFORMATION);
 	}
 
-	bool CMiniblink::OnConfirm(LPCWSTR msg)
-	{
+	bool CMiniblink::OnConfirm(LPCWSTR msg) {
 		return ::MessageBox(GetHWND(), msg, L"询问", MB_OKCANCEL | MB_ICONQUESTION) == IDOK;
 		return false;
 	}
 
-	bool CMiniblink::OnPrompt(LPCWSTR msg, LPCWSTR defaultResult, LPCWSTR result)
-	{
+	bool CMiniblink::OnPrompt(LPCWSTR msg, LPCWSTR defaultResult, LPCWSTR result) {
 
 		return false;
 	}
 
-	bool CMiniblink::OnNavigation(wkeNavigationType navigationType, LPCWSTR url)
-	{
+	bool CMiniblink::OnNavigation(wkeNavigationType navigationType, LPCWSTR url) {
 		return true;
 	}
 
-	CMiniblink * CMiniblink::OnNewOpen(wkeNavigationType navigationType, LPCWSTR url, const wkeWindowFeatures * windowFeatures)
-	{
+	CMiniblink * CMiniblink::OnNewOpen(wkeNavigationType navigationType, LPCWSTR url, const wkeWindowFeatures * windowFeatures) {
 		//wkeNavigationType::
 		//this->Goto(url);
 		return this;
 	}
 
-	void CMiniblink::OnDocumentReady(CWebFrame * frame)
-	{
+	void CMiniblink::OnDocumentReady(CWebFrame * frame) {
 
 	}
 
-	bool CMiniblink::OnDownload(const char * url)
-	{
+	bool CMiniblink::OnDownload(const char * url) {
 		return false;
 	}
 
-	bool CMiniblink::OnResponse(const char * url, CNetJob * job)
-	{
+	bool CMiniblink::OnResponse(const char * url, CNetJob * job) {
 		return false;
 	}
 
-	void CMiniblink::OnConsole(wkeConsoleLevel level, LPCWSTR message, LPCWSTR sourceName, unsigned sourceLine, LPCWSTR stackTrace)
-	{
+	void CMiniblink::OnConsole(wkeConsoleLevel level, LPCWSTR message, LPCWSTR sourceName, unsigned sourceLine, LPCWSTR stackTrace) {
 	}
 
-	bool CMiniblink::OnRequestBegin(const char * url, CNetJob * job)
-	{
+	bool CMiniblink::OnRequestBegin(const char * url, CNetJob * job) {
 		return false;
 	}
 
-	void CMiniblink::OnRequestEnd(const char * url, CNetJob * job, void * buf, int len)
-	{
+	void CMiniblink::OnRequestEnd(const char * url, CNetJob * job, void * buf, int len) {
 	}
 
-	void CMiniblink::OnCreateScriptContext(CWebFrame * frame, void * context, int extensionGroup, int worldId)
-	{
+	void CMiniblink::OnCreateScriptContext(CWebFrame * frame, void * context, int extensionGroup, int worldId) {
 	}
 
-	void CMiniblink::OnReleaseScriptContext(CWebFrame * frame, void * context, int worldId)
-	{
+	void CMiniblink::OnReleaseScriptContext(CWebFrame * frame, void * context, int worldId) {
 	}
 
-	void CMiniblink::OnMediaLoad(const char * url, wkeMediaLoadInfo * info)
-	{
+	void CMiniblink::OnMediaLoad(const char * url, wkeMediaLoadInfo * info) {
 	}
-	void CMiniblink::OnLoadingFinish(LPCWSTR url, wkeLoadingResult result, LPCWSTR failedReason)
-	{
+	void CMiniblink::OnLoadingFinish(LPCWSTR url, wkeLoadingResult result, LPCWSTR failedReason) {
 	}
-	void CMiniblink::onDataRecv(void* ptr, wkeNetJob job, const char* data, int length)
-	{
+	void CMiniblink::onDataRecv(void* ptr, wkeNetJob job, const char* data, int length) {
 
 	}
 
-	void CMiniblink::onDataFinish(void* ptr, wkeNetJob job, wkeLoadingResult result)
-	{
+	void CMiniblink::onDataFinish(void* ptr, wkeNetJob job, wkeLoadingResult result) {
 
 	}
 	unsigned CMiniblink::GetVersion() {
@@ -604,23 +570,19 @@ namespace HttpBridge {
 	#endif // UNICODE
 	}
 
-	const char * CMiniblink::GetUserAgent() const
-	{
+	const char * CMiniblink::GetUserAgent() const {
 		return ::wkeGetUserAgent(m_wkeWebView);
 	}
 
-	void CMiniblink::SetHtml(const char * html, const char * baseUrl)
-	{
+	void CMiniblink::SetHtml(const char * html, const char * baseUrl) {
 		if (baseUrl == NULL) {
 			::wkeLoadHTML(m_wkeWebView, html);
-		}
-		else {
+		} else {
 			::wkeLoadHtmlWithBaseUrl(m_wkeWebView, html, baseUrl);
 		}
 	}
 
-	void CMiniblink::RunJs(const char* js)
-	{
+	void CMiniblink::RunJs(const char* js) {
 		JS_ARG arg;
 		arg.frameId = NULL;
 		arg.js = js;
@@ -629,8 +591,7 @@ namespace HttpBridge {
 		::SendMessage(GetHWND(), GetRunJsMessageId(), (WPARAM)&arg, NULL);
 	}
 
-	void CMiniblink::RunJs(const char* js, int * result)
-	{
+	void CMiniblink::RunJs(const char* js, int * result) {
 		JS_ARG arg;
 		arg.frameId = NULL;
 		arg.js = js;
@@ -640,8 +601,7 @@ namespace HttpBridge {
 		::SendMessage(GetHWND(), GetRunJsMessageId(), (WPARAM)&arg, NULL);
 	}
 
-	void CMiniblink::RunJs(const char* js, double * result)
-	{
+	void CMiniblink::RunJs(const char* js, double * result) {
 		JS_ARG arg;
 		arg.frameId = NULL;
 		arg.js = js;
@@ -651,8 +611,7 @@ namespace HttpBridge {
 		::SendMessage(GetHWND(), GetRunJsMessageId(), (WPARAM)&arg, NULL);
 	}
 
-	void CMiniblink::RunJs(const char* js, bool * result)
-	{
+	void CMiniblink::RunJs(const char* js, bool * result) {
 		JS_ARG arg;
 		arg.frameId = NULL;
 		arg.js = js;
@@ -662,8 +621,7 @@ namespace HttpBridge {
 		::SendMessage(GetHWND(), GetRunJsMessageId(), (WPARAM)&arg, NULL);
 	}
 
-	void CMiniblink::RunJs(const char* js, char * result, int len)
-	{
+	void CMiniblink::RunJs(const char* js, char * result, int len) {
 		JS_ARG arg;
 		arg.frameId = NULL;
 		arg.js = js;
@@ -674,8 +632,7 @@ namespace HttpBridge {
 		::SendMessage(GetHWND(), GetRunJsMessageId(), (WPARAM)&arg, NULL);
 	}
 
-	void CMiniblink::RunJs(const char* js, wchar_t * result, int len)
-	{
+	void CMiniblink::RunJs(const char* js, wchar_t * result, int len) {
 		JS_ARG arg;
 		arg.frameId = NULL;
 		arg.js = js;
@@ -686,29 +643,23 @@ namespace HttpBridge {
 		::SendMessage(GetHWND(), GetRunJsMessageId(), (WPARAM)&arg, NULL);
 	}
 
-	void CMiniblink::SetSize(int width, int height)
-	{
+	void CMiniblink::SetSize(int width, int height) {
 		::wkeResize(m_wkeWebView, width, height);
 	}
 
-	void CMiniblink::SetDeviceParameter(const char * device, const char * paramStr, int paramInt, float paramFloat)
-	{
+	void CMiniblink::SetDeviceParameter(const char * device, const char * paramStr, int paramInt, float paramFloat) {
 		::wkeSetDeviceParameter(m_wkeWebView, device, paramStr, paramInt, paramFloat);
 	}
 
-	void CMiniblink::SetSettings(const wkeViewSettings * settings)
-	{
+	void CMiniblink::SetSettings(const wkeViewSettings * settings) {
 		::wkeSetViewSettings(m_wkeWebView, settings);
 	}
 
-	void CMiniblink::SimulationAction(MB_ACTION_ITEM * action)
-	{
+	void CMiniblink::SimulationAction(MB_ACTION_ITEM * action) {
 		if (action == NULL || action->data == NULL) return;
 		if (action->async) {
 			::PostMessage(GetHWND(), GetActionMessageId(), (WPARAM)m_wkeWebView, (LPARAM)action);
-		}
-		else
-		{
+		} else {
 			::SendMessage(GetHWND(), GetActionMessageId(), (WPARAM)m_wkeWebView, (LPARAM)action);
 		}
 
@@ -821,13 +772,11 @@ namespace HttpBridge {
 		wkeResize(m_wkeWebView, oldwidth, oldheight);
 		wkeRunJS(m_wkeWebView, "document.body.style.overflow='visible'");
 	}
-	void CMiniblink::FlushCookie()
-	{
+	void CMiniblink::FlushCookie() {
 		::wkePerformCookieCommand(m_wkeWebView, wkeCookieCommand::wkeCookieCommandFlushCookiesToFile);
 	}
 
-	void CMiniblink::SetWkeDllPath(LPCTSTR dllPath)
-	{
+	void CMiniblink::SetWkeDllPath(LPCTSTR dllPath) {
 		::wkeSetWkeDllPath(dllPath);
 	}
 	void CMiniblink::SetGlobalProxy(const wkeProxy* proxy) {
@@ -839,8 +788,7 @@ namespace HttpBridge {
 		return id;
 	}
 
-	UINT CMiniblink::GetActionMessageId()
-	{
+	UINT CMiniblink::GetActionMessageId() {
 		static UINT id = ::RegisterWindowMessage(L"MB_ACTION_EXECUTE");
 		return id;
 	}
@@ -899,8 +847,7 @@ namespace HttpBridge {
         return jsUndefined();
     }
 
-	void WKE_CALL_TYPE CMiniblink::MBTitleChanged(wkeWebView webView, void * param, const wkeString title)
-	{
+	void WKE_CALL_TYPE CMiniblink::MBTitleChanged(wkeWebView webView, void * param, const wkeString title) {
 		CMiniblink *cmb = (CMiniblink *)param;
 		if (cmb == NULL || cmb->m_released) return;
 	#ifdef UNICODE
@@ -910,8 +857,7 @@ namespace HttpBridge {
 	#endif // UNICODE
 	}
 
-	void WKE_CALL_TYPE CMiniblink::MBUrlChanged(wkeWebView webView, void * param, wkeWebFrameHandle frameId, const wkeString url)
-	{
+	void WKE_CALL_TYPE CMiniblink::MBUrlChanged(wkeWebView webView, void * param, wkeWebFrameHandle frameId, const wkeString url) {
 		CMiniblink *cmb = (CMiniblink *)param;
 		if (cmb == NULL || cmb->m_released) return;
 		CWebFrame frame(frameId, cmb->GetWebView(),cmb->GetHWND());
@@ -922,8 +868,7 @@ namespace HttpBridge {
 	#endif // UNICODE
 	}
 
-	void WKE_CALL_TYPE CMiniblink::MBAlert(wkeWebView webView, void * param, const wkeString msg)
-	{
+	void WKE_CALL_TYPE CMiniblink::MBAlert(wkeWebView webView, void * param, const wkeString msg) {
 		CMiniblink *cmb = (CMiniblink *)param;
 		if (cmb == NULL || cmb->m_released) return;
 	#ifdef UNICODE
@@ -933,8 +878,7 @@ namespace HttpBridge {
 	#endif // UNICODE
 	}
 
-	bool WKE_CALL_TYPE CMiniblink::MBConfirm(wkeWebView webView, void * param, const wkeString msg)
-	{
+	bool WKE_CALL_TYPE CMiniblink::MBConfirm(wkeWebView webView, void * param, const wkeString msg) {
 		CMiniblink *cmb = (CMiniblink *)param;
 		if (cmb == NULL || cmb->m_released) return false;
 	#ifdef UNICODE
@@ -944,8 +888,7 @@ namespace HttpBridge {
 	#endif // UNICODE
 	}
 
-	bool WKE_CALL_TYPE CMiniblink::MBPromptBox(wkeWebView webView, void * param, const wkeString msg, const wkeString defaultResult, wkeString result)
-	{
+	bool WKE_CALL_TYPE CMiniblink::MBPromptBox(wkeWebView webView, void * param, const wkeString msg, const wkeString defaultResult, wkeString result) {
 		CMiniblink *cmb = (CMiniblink *)param;
 		if (cmb == NULL || cmb->m_released) return false;
 	#ifdef UNICODE
@@ -955,8 +898,7 @@ namespace HttpBridge {
 	#endif // UNICODE
 	}
 
-	bool WKE_CALL_TYPE CMiniblink::MBNavigation(wkeWebView webView, void * param, wkeNavigationType navigationType, const wkeString url)
-	{
+	bool WKE_CALL_TYPE CMiniblink::MBNavigation(wkeWebView webView, void * param, wkeNavigationType navigationType, const wkeString url) {
 		CMiniblink *cmb = (CMiniblink *)param;
 		if (cmb == NULL || cmb->m_released) return false;
 	#ifdef UNICODE
@@ -966,8 +908,7 @@ namespace HttpBridge {
 	#endif // UNICODE
 	}
 
-	wkeWebView WKE_CALL_TYPE CMiniblink::MBCreateView(wkeWebView webView, void * param, wkeNavigationType navigationType, const wkeString url, const wkeWindowFeatures * windowFeatures)
-	{
+	wkeWebView WKE_CALL_TYPE CMiniblink::MBCreateView(wkeWebView webView, void * param, wkeNavigationType navigationType, const wkeString url, const wkeWindowFeatures * windowFeatures) {
 		CMiniblink *cmb = (CMiniblink *)param;
 		if (cmb == NULL || cmb->m_released) return NULL;
 	#ifdef UNICODE
@@ -977,22 +918,19 @@ namespace HttpBridge {
 	#endif // UNICODE
 	}
 
-	void WKE_CALL_TYPE CMiniblink::MBDocumentReady(wkeWebView webView, void * param, wkeWebFrameHandle frameId)
-	{
+	void WKE_CALL_TYPE CMiniblink::MBDocumentReady(wkeWebView webView, void * param, wkeWebFrameHandle frameId) {
 		CMiniblink *cmb = (CMiniblink *)param;
 		if (cmb == NULL || cmb->m_released) return;
 		CWebFrame frame(frameId, cmb->GetWebView(), cmb->GetHWND());
 		return cmb->OnDocumentReady(&frame);
 	}
 
-	bool WKE_CALL_TYPE CMiniblink::MBDownload(wkeWebView webView, void * param, const char * url)
-	{
+	bool WKE_CALL_TYPE CMiniblink::MBDownload(wkeWebView webView, void * param, const char * url) {
 		CMiniblink *cmb = (CMiniblink *)param;
 		if (cmb == NULL || cmb->m_released) return false;
 		return cmb->OnDownload(url);
 	}
-	wkeDownloadOpt WKE_CALL_TYPE CMiniblink::MBDownload2(wkeWebView webView, void* param, size_t expectedContentLength, const char* url, const char* mime, const char* disposition, wkeNetJob job, wkeNetJobDataBind* dataBind)
-	{
+	wkeDownloadOpt WKE_CALL_TYPE CMiniblink::MBDownload2(wkeWebView webView, void* param, size_t expectedContentLength, const char* url, const char* mime, const char* disposition, wkeNetJob job, wkeNetJobDataBind* dataBind) {
 		static wkeNetJobDataBind s_dataBind;
 		s_dataBind.recvCallback = onDataRecv;
 		s_dataBind.finishCallback = onDataFinish;
@@ -1018,8 +956,7 @@ namespace HttpBridge {
 		return cmb->OnResponse(url, &_job);
 	}
 
-	void WKE_CALL_TYPE CMiniblink::MBConsole(wkeWebView webView, void * param, wkeConsoleLevel level, const wkeString message, const wkeString sourceName, unsigned sourceLine, const wkeString stackTrace)
-	{
+	void WKE_CALL_TYPE CMiniblink::MBConsole(wkeWebView webView, void * param, wkeConsoleLevel level, const wkeString message, const wkeString sourceName, unsigned sourceLine, const wkeString stackTrace) {
 		CMiniblink *cmb = (CMiniblink *)param;
 		if (cmb == NULL || cmb->m_released) return;
 	#ifdef UNICODE
@@ -1029,8 +966,7 @@ namespace HttpBridge {
 	#endif // UNICODE
 	}
 
-	bool WKE_CALL_TYPE CMiniblink::MBLoadUrlBegin(wkeWebView webView, void * param, const char * url, wkeNetJob job)
-	{
+	bool WKE_CALL_TYPE CMiniblink::MBLoadUrlBegin(wkeWebView webView, void * param, const char * url, wkeNetJob job) {
 
 		// const char kPreHead[] = "http://hook.test/";
 		// const char* pos = strstr(url, kPreHead);
@@ -1065,39 +1001,33 @@ namespace HttpBridge {
 		return cmb->OnRequestBegin(url, &_job);
 	}
 
-	void WKE_CALL_TYPE CMiniblink::MBLoadUrlEnd(wkeWebView webView, void * param, const char * url, wkeNetJob job, void * buf, int len)
-	{
+	void WKE_CALL_TYPE CMiniblink::MBLoadUrlEnd(wkeWebView webView, void * param, const char * url, wkeNetJob job, void * buf, int len) {
 		CMiniblink *cmb = (CMiniblink *)param;
 		if (cmb == NULL || cmb->m_released) return;
 		CNetJob _job(job);
 		return cmb->OnRequestEnd(url, &_job, buf, len);
 	}
 
-	void WKE_CALL_TYPE CMiniblink::MBCreateScriptContext(wkeWebView webView, void * param, wkeWebFrameHandle frameId, void * context, int extensionGroup, int worldId)
-	{
+	void WKE_CALL_TYPE CMiniblink::MBCreateScriptContext(wkeWebView webView, void * param, wkeWebFrameHandle frameId, void * context, int extensionGroup, int worldId) {
 		CMiniblink *cmb = (CMiniblink *)param;
 		if (cmb == NULL || cmb->m_released) return;
 		CWebFrame frame(frameId, cmb->GetWebView(), cmb->GetHWND());
 		return cmb->OnCreateScriptContext(&frame, context, extensionGroup, worldId);
 	}
 
-	void WKE_CALL_TYPE CMiniblink::MBReleaseScriptContext(wkeWebView webView, void * param, wkeWebFrameHandle frameId, void * context, int worldId)
-	{
+	void WKE_CALL_TYPE CMiniblink::MBReleaseScriptContext(wkeWebView webView, void * param, wkeWebFrameHandle frameId, void * context, int worldId) {
 		CMiniblink *cmb = (CMiniblink *)param;
 		if (cmb == NULL || cmb->m_released) return;
 		CWebFrame frame(frameId, cmb->GetWebView(), cmb->GetHWND());
 		return cmb->OnReleaseScriptContext(&frame, context, worldId);
 	}
 
-	void WKE_CALL_TYPE CMiniblink::MBMediaLoad(wkeWebView webView, void * param, const char * url, wkeMediaLoadInfo * info)
-
-	{
+	void WKE_CALL_TYPE CMiniblink::MBMediaLoad(wkeWebView webView, void * param, const char * url, wkeMediaLoadInfo * info) {
 		CMiniblink *cmb = (CMiniblink *)param;
 		if (cmb == NULL || cmb->m_released) return;
 		return cmb->OnMediaLoad(url, info);
 	}
-	void WKE_CALL_TYPE CMiniblink::MBLoadedFinish(wkeWebView webView, void* param, const wkeString url, wkeLoadingResult result, const wkeString failedReason)
-	{
+	void WKE_CALL_TYPE CMiniblink::MBLoadedFinish(wkeWebView webView, void* param, const wkeString url, wkeLoadingResult result, const wkeString failedReason) {
 		CMiniblink *cmb = (CMiniblink *)param;
 		if (cmb == NULL || cmb->m_released) return;
 	#ifdef UNICODE
@@ -1107,14 +1037,12 @@ namespace HttpBridge {
 	#endif // UNICODE
 
 	}
-	void CMiniblink::updateCursor()
-	{
+	void CMiniblink::updateCursor() {
 		int cursorInfo = wkeGetCursorInfoType(m_wkeWebView);
 		if (m_cursor != cursorInfo) {
 			m_cursor = cursorInfo;
 			HCURSOR curosr = ::LoadCursor(NULL, IDC_ARROW);
-			switch (cursorInfo)
-			{
+			switch (cursorInfo) {
 			case WkeCursorInfoPointer:
 				curosr = ::LoadCursor(NULL, IDC_ARROW);
 				break;
@@ -1189,22 +1117,18 @@ namespace HttpBridge {
 		}
 	}
 
-	CWebFrame::CWebFrame(wkeWebFrameHandle frameId, wkeWebView webview,HWND hwnd) :m_webFrame(frameId), m_web(webview),m_hwnd(hwnd)
-	{
+	CWebFrame::CWebFrame(wkeWebFrameHandle frameId, wkeWebView webview,HWND hwnd) :m_webFrame(frameId), m_web(webview),m_hwnd(hwnd) {
 	}
 
-	bool CWebFrame::IsMainFrame()
-	{
+	bool CWebFrame::IsMainFrame() {
 		return ::wkeIsMainFrame(m_web, m_webFrame);
 	}
 
-	const char * CWebFrame::GetUrl() const
-	{
+	const char * CWebFrame::GetUrl() const {
 		return ::wkeGetFrameUrl(m_web, m_webFrame);
 	}
 
-	void CWebFrame::RunJs(const char * js)
-	{
+	void CWebFrame::RunJs(const char * js) {
 		JS_ARG arg;
 		arg.frameId = m_webFrame;
 		arg.js = js;
@@ -1213,8 +1137,7 @@ namespace HttpBridge {
 		::SendMessage(m_hwnd, CMiniblink::GetRunJsMessageId(), (WPARAM)&arg, NULL);
 	}
 
-	void CWebFrame::RunJs(const char * js, int * result)
-	{
+	void CWebFrame::RunJs(const char * js, int * result) {
 		JS_ARG arg;
 		arg.frameId = m_webFrame;
 		arg.js = js;
@@ -1223,8 +1146,7 @@ namespace HttpBridge {
 		::SendMessage(m_hwnd, CMiniblink::GetRunJsMessageId(), (WPARAM)&arg, NULL);
 	}
 
-	void CWebFrame::RunJs(const char * js, double * result)
-	{
+	void CWebFrame::RunJs(const char * js, double * result) {
 		JS_ARG arg;
 		arg.frameId = m_webFrame;
 		arg.js = js;
@@ -1233,8 +1155,7 @@ namespace HttpBridge {
 		::SendMessage(m_hwnd, CMiniblink::GetRunJsMessageId(), (WPARAM)&arg, NULL);
 	}
 
-	void CWebFrame::RunJs(const char * js, bool * result)
-	{
+	void CWebFrame::RunJs(const char * js, bool * result) {
 		JS_ARG arg;
 		arg.frameId = m_webFrame;
 		arg.js = js;
@@ -1243,8 +1164,7 @@ namespace HttpBridge {
 		::SendMessage(m_hwnd, CMiniblink::GetRunJsMessageId(), (WPARAM)&arg, NULL);
 	}
 
-	void CWebFrame::RunJs(const char * js, char * result, int len)
-	{
+	void CWebFrame::RunJs(const char * js, char * result, int len) {
 		JS_ARG arg;
 		arg.frameId = m_webFrame;
 		arg.js = js;
@@ -1254,8 +1174,7 @@ namespace HttpBridge {
 		::SendMessage(m_hwnd, CMiniblink::GetRunJsMessageId(), (WPARAM)&arg, NULL);
 	}
 
-	void CWebFrame::RunJs(const char * js, wchar_t * result, int len)
-	{
+	void CWebFrame::RunJs(const char * js, wchar_t * result, int len) {
 		JS_ARG arg;
 		arg.frameId = m_webFrame;
 		arg.js = js;
@@ -1265,8 +1184,7 @@ namespace HttpBridge {
 		::SendMessage(m_hwnd, CMiniblink::GetRunJsMessageId(), (WPARAM)&arg, NULL);
 	}
 
-	void CNetJob::HookRequest()
-	{
+	void CNetJob::HookRequest() {
 		::wkeNetHookRequest(m_job);
 	}
 
