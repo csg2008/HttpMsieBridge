@@ -19,6 +19,8 @@
 #include "misc/version.h"
 #include "misc/string_utils.h"
 #include "web_server.h"
+#include "mb/wke.h"
+#include "mb/mb.hpp"
 
 #pragma comment(lib,"winmm.lib")
 
@@ -253,21 +255,72 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
-bool ProcessKeyboardMessage(MSG* msg) {
-    if (msg->message == WM_KEYDOWN
-            || msg->message == WM_KEYUP
-            || msg->message == WM_SYSKEYDOWN
-            || msg->message == WM_SYSKEYUP) {
-        HWND root = GetAncestor(msg->hwnd, GA_ROOT);
-        BrowserWindow* browser = GetBrowserWindow(std::to_string((long long) root));
-        if (browser) {
-            if (browser->TranslateAccelerator(msg))
-                return true;
-        } else {
-            LOG_DEBUG << "ProcessKeyboardMessage(): could not fetch BrowserWindow";
+bool ProcessKeyboardMessage(MSG* msg, std::string engine) {
+    if ("msie" == engine) {
+        if (msg->message == WM_KEYDOWN
+                || msg->message == WM_KEYUP
+                || msg->message == WM_SYSKEYDOWN
+                || msg->message == WM_SYSKEYUP) {
+            HWND root = GetAncestor(msg->hwnd, GA_ROOT);
+            BrowserWindow* browser = GetBrowserWindow(std::to_string((long long) root));
+            if (browser) {
+                if (browser->TranslateAccelerator(msg))
+                    return true;
+            } else {
+                LOG_DEBUG << "ProcessKeyboardMessage(): could not fetch BrowserWindow";
+            }
+        }
+    } else {
+
+    }
+
+    return false;
+}
+
+void checkInstanceOnce(LPTSTR className) {
+    g_Instance.Initialize(className);
+    if (g_Instance.IsRunning()) {
+        HWND hwnd = FindWindow(className, NULL);
+        if (hwnd) {
+            if (IsIconic(hwnd)){
+                ShowWindow(hwnd, SW_RESTORE);
+            }
+
+            SetForegroundWindow(hwnd);
         }
     }
-    return false;
+}
+
+bool initMSIEEntry() {
+    nlohmann::json* settings = GetApplicationSettings();
+    const bool instance = (*settings)["window"]["instance"];
+    const std::string engine = (*settings)["integration"]["engine"];
+
+    // check ie min require
+    if (!CheckIeRequire()) {
+        LOG_ERROR << "check ie min require failed, quit...";
+        return false;
+    }
+
+    // From the MSDN "WebBrowser Customization" docs:
+    //   Your application should use OleInitialize rather than CoInitialize
+    //   to start COM. OleInitialize enables support for the Clipboard,
+    //   drag-and-drop operations, OLE, and in-place activation.
+    // See: http://msdn.microsoft.com/en-us/library/aa770041(v=vs.85).aspx
+    HRESULT hr = OleInitialize(NULL);
+    _ASSERT(SUCCEEDED(hr));
+
+    SetInternetFeatures();
+
+    return true;
+}
+
+bool initMBEntry() {
+    if (!wkeInitialize()) {
+        return false;
+    }
+
+    return true;
 }
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrCmdLine, int nCmdShow) {
@@ -291,7 +344,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrCm
     InitializeLogging(show_console, log_level, log_file);
     
     LOG_INFO << "--------------------------------------------------------";
-    LOG_INFO << "Started application http msie bridge";
+    LOG_INFO << "Started application http msie bridge, engine :" << (*settings)["window"]["title"].get<std::string>();
 
     GetAllHDSerialNumber();
 
@@ -321,12 +374,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrCm
         LOG_WARNING << "CommandLineToArgvW() failed";
     }
 
-    // check ie min require
-    if (!CheckIeRequire()) {
-        LOG_ERROR << "check ie min require failed, quit...";
-        return -1;
-    }
-
     // startup spec application
     std::string startup = (*settings)["integration"]["startup"];
     if ("" != startup) {
@@ -338,45 +385,49 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrCm
         }
     }
  
-    // Main window title option.
-    std::string main_window_title = (*settings)["window"]["title"];
-    if (main_window_title.empty()) {
-        main_window_title = GetExecutableName();
-    }
-
     // Single instance guid option.
     const bool instance = (*settings)["window"]["instance"];
+    const std::string engine = (*settings)["integration"]["engine"];
     if (instance) {
-        g_Instance.Initialize(CLASS_NAME_MSIE_EX);
-	    if (g_Instance.IsRunning()) {
-            HWND hwnd = FindWindow(CLASS_NAME_MSIE_EX, NULL);
-            if (hwnd) {
-                if (IsIconic(hwnd)){
-                    ShowWindow(hwnd, SW_RESTORE);
-                }
-
-                SetForegroundWindow(hwnd);
-                return 0;
-            }
+        if ("msie" == engine) {
+            checkInstanceOnce(CLASS_NAME_MSIE_EX);
+        } else {
+            checkInstanceOnce(CLASS_NAME_MB_EX);
         }
     }
 
+    if ("msie" == engine) {
+        if (!initMSIEEntry()) {
+            LOG_ERROR << "init engine msie failed";
+            return 1;
+        }
+
+        g_hwnd = CreateMainWindow(hInstance, nCmdShow, CLASS_NAME_MSIE_EX, WindowProc);
+    } else {
+        if (!initMBEntry()) {
+            LOG_ERROR << "init engine mb failed";
+            return 1;
+        }
+
+        HttpBridge::CMiniblink window(WKE_WINDOW_TYPE_POPUP, NULL, 800, 600);
+        HttpBridge::bind("add", [&window](int a, int b) {
+            window.call("setValue", a + b);
+        });
+        window.load(L"app:///index.html");
+        window.set_quit_on_close();
+        window.show();
+
+        g_hwnd = window.GetHWND();
+
+        HICON hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDR_MAINAPP));
+        ::SendMessage(window.GetHWND(), WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+        ::SendMessage(window.GetHWND(), WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
+    }
     if (!StartWebServer()) {
         FatalError(NULL, "Could not start internal web server, Exiting application...");
     }
 
-    // From the MSDN "WebBrowser Customization" docs:
-    //   Your application should use OleInitialize rather than CoInitialize
-    //   to start COM. OleInitialize enables support for the Clipboard,
-    //   drag-and-drop operations, OLE, and in-place activation.
-    // See: http://msdn.microsoft.com/en-us/library/aa770041(v=vs.85).aspx
-    HRESULT hr = OleInitialize(NULL);
-    _ASSERT(SUCCEEDED(hr));
-
-    SetInternetFeatures();
-    
     hTrayMenu = LoadMenu(GetModuleHandle(0), MAKEINTRESOURCE(IDR_POPUP_MENU));
-    g_hwnd = CreateMainWindow(hInstance, nCmdShow, main_window_title, CLASS_NAME_MSIE_EX, WindowProc);
     Shell_NotifyIcon(NIM_ADD, &GetTrayData(g_hwnd));
 
     HACCEL  hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDR_MAINFRAME));
@@ -389,14 +440,16 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrCm
             _ASSERT(false);
             break;
         } else {
-            if (!ProcessKeyboardMessage(&msg) && !TranslateAccelerator(msg.hwnd, hAccelTable, &msg)) {
+            if (!ProcessKeyboardMessage(&msg, engine) && !TranslateAccelerator(msg.hwnd, hAccelTable, &msg)) {
                 TranslateMessage(&msg);
                 DispatchMessage(&msg);
             }
         }
     }
 
-    OleUninitialize();
+    if ("msie" == engine) {
+        OleUninitialize();
+    }
 
     LOG_INFO << "Ended application";
     LOG_INFO << "--------------------------------------------------------";

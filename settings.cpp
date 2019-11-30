@@ -38,5 +38,21 @@ nlohmann::json* GetApplicationSettings() {
         LOG_WARNING << "Error while parsing settings.json file: " << err;
     }
 
+    if ((*ret)["integration"]["engine"].is_null()) {
+        (*ret)["integration"]["engine"] = "mb";
+    } else if ((*ret)["integration"]["engine"].is_string()) {
+        if ("msie" != (*ret)["integration"]["engine"].get<std::string>() && "mb" != (*ret)["integration"]["engine"].get<std::string>()) {
+            LOG_WARNING << "Gui engine must be msie or mb, give: " << (*ret)["integration"]["engine"];
+            (*ret)["integration"]["engine"] = "mb";
+        }
+    } else {
+        LOG_WARNING << "Gui engine must be msie or mb, give: " << (*ret)["integration"]["engine"];
+        (*ret)["integration"]["engine"] = "mb";
+    }
+
+    if ((*ret)["window"]["title"].empty()) {
+        (*ret)["window"]["title"] = GetExecutableName();
+    }
+
     return ret;
 }

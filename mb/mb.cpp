@@ -32,16 +32,6 @@ void setAppIcon(HWND hwnd) {
     }
 }
 
-bool isOneInstance() {
-    HANDLE mutex = CreateMutexW(NULL, TRUE, wkeWebViewClassName);
-    if ((mutex != NULL) && (GetLastError() == ERROR_ALREADY_EXISTS)) {
-        ReleaseMutex(mutex);
-        return false;
-    }
-
-    return true;
-}
-
 int APIENTRY wWinMainMB(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow) {
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
@@ -49,11 +39,6 @@ int APIENTRY wWinMainMB(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpC
     hInst = hInstance;
     //myRegisterClass(hInstance);
     using namespace HttpBridge;
-
-    if (!isOneInstance()) {
-        ::MessageBoxW(NULL, L"该进程已经启动", L"错误", MB_OK);
-        return 0;
-    }
 
     if (!wkeInitialize()) {
         return 1;

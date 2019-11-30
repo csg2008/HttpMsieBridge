@@ -11,15 +11,16 @@
 #include "msie.h"
 
 
-HWND CreateMainWindow(HINSTANCE hInstance, int nCmdShow, std::string title, LPCWSTR windowClassName, WNDPROC winProc) {
-    nlohmann::json* appSettings = GetApplicationSettings();
-    int default_width = (*appSettings)["window"]["default_size"][0];
-    int default_height = (*appSettings)["window"]["default_size"][1];
-    bool disable_maximize_button = (*appSettings)["window"]["disable_maximize_button"];
-    bool center_on_screen = (*appSettings)["window"]["center_on_screen"];
-    bool dpi_aware = (*appSettings)["window"]["dpi_aware"];
-    bool start_maximized = (*appSettings)["window"]["start_maximized"];
-    bool always_on_top = (*appSettings)["window"]["always_on_top"];
+HWND CreateMainWindow(HINSTANCE hInstance, int nCmdShow, LPCWSTR windowClassName, WNDPROC winProc) {
+    nlohmann::json* setting = GetApplicationSettings();
+    std::string title = (*setting)["window"]["title"];
+    int default_width = (*setting)["window"]["default_size"][0];
+    int default_height = (*setting)["window"]["default_size"][1];
+    bool disable_maximize_button = (*setting)["window"]["disable_maximize_button"];
+    bool center_on_screen = (*setting)["window"]["center_on_screen"];
+    bool dpi_aware = (*setting)["window"]["dpi_aware"];
+    bool start_maximized = (*setting)["window"]["start_maximized"];
+    bool always_on_top = (*setting)["window"]["always_on_top"];
 
     if (default_width && default_height) {
         if (dpi_aware) {

@@ -14,4 +14,4 @@ HWND CreatePopupWindow(HWND parentHandle);
 bool CenterWindowRelativeToParent(HWND window, HWND parent);
 void GetCorrectWindowSize(int* width, int* height);
 void GetDpiAwareWindowSize(int* width, int* height);
-HWND CreateMainWindow(HINSTANCE hInstance, int nCmdShow, std::string title, LPCWSTR windowClassName, WNDPROC winProc);
+HWND CreateMainWindow(HINSTANCE hInstance, int nCmdShow, LPCWSTR windowClassName, WNDPROC winProc);
