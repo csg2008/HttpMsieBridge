@@ -2,6 +2,7 @@
 #include <cassert>
 #include <utility>
 #include <time.h>
+#include "misc/logger.h"
 #include "../resource.h"
 #include "bind.h"
 #include "filesystem.h"
@@ -120,6 +121,10 @@ namespace HttpBridge {
 
 		::wkeSetDebugConfig(m_wkeWebView, "decodeUrlRequest", nullptr);
 		::wkeSetWindowTitleW(m_wkeWebView, L"miniblink demo");
+
+		std::string temp_path = (*settings)["integration"]["temp"];
+		::wkeSetCookieJarPath(m_wkeWebView, ConvertW(temp_path.c_str()));
+		::wkeSetLocalStorageFullPath(m_wkeWebView, ConvertW((temp_path+"\\LocalStorage").c_str()));
 
 		//::SetWindowSubclass(wkeGetWindowHandle(m_wkeWebView), subClassProc, 0, 0);
 	}
@@ -401,6 +406,7 @@ namespace HttpBridge {
 	}
 
 	void CMiniblink::OnConsole(wkeConsoleLevel level, LPCWSTR message, LPCWSTR sourceName, unsigned sourceLine, LPCWSTR stackTrace) {
+		LOG_INFO << "OnConsole source " << WideToUtf8(sourceName) << ":" << sourceLine << " " << WideToUtf8(message);
 	}
 
 	bool CMiniblink::OnRequestBegin(const char * url, CNetJob * job) {
@@ -993,11 +999,10 @@ namespace HttpBridge {
 		// } else if (strcmp(url, "http://www.baidu.com/") == 0) {
 		// 	wkeNetHookRequest(job);
 		// }
-		
 		CMiniblink *cmb = (CMiniblink *)param;
 		if (cmb == NULL || cmb->m_released) return false;
 		CNetJob _job(job);
-		
+
 		return cmb->OnRequestBegin(url, &_job);
 	}
 

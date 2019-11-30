@@ -59,6 +59,17 @@ nlohmann::json* GetApplicationSettings() {
         (*ret)["integration"]["log_file"] = GetRealPath(log_file);
     }
 
+    if ((*ret)["integration"]["temp"].empty()) {
+        (*ret)["integration"]["temp"] = GetRealPath(GetExecutableDirectory());
+    } else {
+        std::string temp_path = (*ret)["integration"]["temp"];
+        if (std::string::npos == temp_path.find(":")) {
+            temp_path = GetExecutableDirectory() + "\\" + temp_path;
+        }
+
+        (*ret)["integration"]["temp"] = GetRealPath(temp_path);
+    }
+
     if ((*ret)["window"]["title"].empty()) {
         (*ret)["window"]["title"] = GetExecutableName();
     }

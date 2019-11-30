@@ -422,7 +422,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrCm
     MSG msg;
     int ret;
     while ((ret = GetMessage(&msg, 0, 0, 0)) != 0) {
-        LOG_ERROR << "GetMessage " << ret << " counter " << HttpBridge::CMiniblink::counter;
         if (ret == -1) {
             LOG_ERROR << "WinMain.GetMessage() returned -1";
             _ASSERT(false);
