@@ -333,18 +333,11 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrCm
     bool show_console = (*settings)["integration"]["show_console"];
     std::string log_level = (*settings)["integration"]["log_level"];
     std::string log_file = (*settings)["integration"]["log_file"];
-    if (log_file.length()) {
-        if (std::string::npos == log_file.find(":")) {
-            log_file = GetExecutableDirectory() + "\\" + log_file;
-        }
-
-        log_file = GetRealPath(log_file);
-    }
 
     InitializeLogging(show_console, log_level, log_file);
     
     LOG_INFO << "--------------------------------------------------------";
-    LOG_INFO << "Started application http msie bridge, engine :" << (*settings)["window"]["title"].get<std::string>();
+    LOG_INFO << "Started application http msie bridge, engine :" << (*settings)["integration"]["engine"].get<std::string>();
 
     GetAllHDSerialNumber();
 
@@ -388,6 +381,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrCm
     // Single instance guid option.
     const bool instance = (*settings)["window"]["instance"];
     const std::string engine = (*settings)["integration"]["engine"];
+    const std::string homepage = (*settings)["integration"]["homepage"];
     if (instance) {
         if ("msie" == engine) {
             checkInstanceOnce(CLASS_NAME_MSIE_EX);
@@ -396,6 +390,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrCm
         }
     }
 
+    HttpBridge::CMiniblink *window;
     if ("msie" == engine) {
         if (!initMSIEEntry()) {
             LOG_ERROR << "init engine msie failed";
@@ -409,19 +404,19 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrCm
             return 1;
         }
 
-        HttpBridge::CMiniblink window(WKE_WINDOW_TYPE_POPUP, NULL, 800, 600);
-        HttpBridge::bind("add", [&window](int a, int b) {
-            window.call("setValue", a + b);
+        window = new HttpBridge::CMiniblink(WKE_WINDOW_TYPE_POPUP, NULL, 800, 600);
+        HttpBridge::bind("add", [window](int a, int b) {
+            window->call("setValue", a + b);
         });
-        window.load(L"app:///index.html");
-        window.set_quit_on_close();
-        window.show();
+        window->load(char_to_wchar(homepage.c_str()));
+        window->set_quit_on_close();
+        window->show();
 
-        g_hwnd = window.GetHWND();
+        g_hwnd = window->GetHWND();
 
         HICON hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDR_MAINAPP));
-        ::SendMessage(window.GetHWND(), WM_SETICON, ICON_BIG, (LPARAM)hIcon);
-        ::SendMessage(window.GetHWND(), WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
+        ::SendMessage(window->GetHWND(), WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+        ::SendMessage(window->GetHWND(), WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
     }
     if (!StartWebServer()) {
         FatalError(NULL, "Could not start internal web server, Exiting application...");
@@ -435,6 +430,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrCm
     MSG msg;
     int ret;
     while ((ret = GetMessage(&msg, 0, 0, 0)) != 0) {
+        LOG_ERROR << "GetMessage " << ret << " counter " << HttpBridge::CMiniblink::counter;
         if (ret == -1) {
             LOG_ERROR << "WinMain.GetMessage() returned -1";
             _ASSERT(false);
