@@ -17,6 +17,7 @@
 
 #include "3rd/ieproxy.h"
 #include "3rd/httplib.h"
+#include "3rd/jsonrpc.h"
 #include "misc/file_utils.h"
 #include "web_server.h"
 #include "misc/logger.h"
@@ -135,8 +136,8 @@ int httptest(int port) {
 
     svr.Post("/api/v1/notify", [](const Request &req, Response &res) {
         bool ret = false;
-        std::string snd = TrimString(req.get_form_value("snd"));
-        std::string msg = TrimString(req.get_form_value("msg"));
+        std::string snd = trim(req.get_form_value("snd"));
+        std::string msg = trim(req.get_form_value("msg"));
 
         if (msg.empty()) {
             res.set_content("param msg is empty", "text/plain");
@@ -150,8 +151,8 @@ int httptest(int port) {
 
     svr.Post("/api/v1/proxy", [](const Request &req, Response &res) {
         bool ret = false;
-        std::string server = TrimString(req.get_form_value("server"));
-        bool enable = "yes" == LowerString(TrimString(req.get_form_value("enable")));
+        std::string server = trim(req.get_form_value("server"));
+        bool enable = "yes" == LowerString(trim(req.get_form_value("enable")));
 
         ProxyConfig config;
         if (server.empty()) {
@@ -174,7 +175,7 @@ int httptest(int port) {
     });
 
     svr.Post("/api/v1/open", [](const Request &req, Response &res) {
-        std::string url = TrimString(req.get_form_value("url"));
+        std::string url = trim(req.get_form_value("url"));
 
         if (url.empty()) {
             url = "https://www.baidu.com";
@@ -187,7 +188,7 @@ int httptest(int port) {
 
     svr.Post("/api/v1/url", [](const Request &req, Response &res) {
         BrowserWindow* browser = getBrowse(req, res);
-        std::string url = TrimString(req.get_form_value("url"));
+        std::string url = trim(req.get_form_value("url"));
 
         if (!browser) {
             return ;
@@ -199,9 +200,9 @@ int httptest(int port) {
 
             res.set_content((char*) url, "text/plain");
         } else {
-            std::string data = TrimString(req.get_form_value("data"));
-            std::string header = TrimString(req.get_form_value("header"));
-            bool isPost = "post" == LowerString(TrimString(req.get_form_value("method")));
+            std::string data = trim(req.get_form_value("data"));
+            std::string header = trim(req.get_form_value("header"));
+            bool isPost = "post" == LowerString(trim(req.get_form_value("method")));
             bool ret = browser -> Navigate(isPost, url, header, data);
 
             res.set_content(ret ? "ok" : "failed", "text/plain");
@@ -210,7 +211,7 @@ int httptest(int port) {
 
     svr.Post("/api/v1/trigger", [](const Request &req, Response &res) {
         BrowserWindow* browser = getBrowse(req, res);
-        std::string id = TrimString(req.get_form_value("id"));
+        std::string id = trim(req.get_form_value("id"));
 
         if (!browser) {
            return ;
@@ -224,8 +225,8 @@ int httptest(int port) {
     svr.Post("/api/v1/exec", [](const Request &req, Response &res) {
         BrowserWindow* browser = getBrowse(req, res);
         std::wstring seperator = Utf8ToWide("|");
-        std::string func = TrimString(req.get_form_value("func"));
-        std::string args = TrimString(req.get_form_value("args"));
+        std::string func = trim(req.get_form_value("func"));
+        std::string args = trim(req.get_form_value("args"));
         std::vector<std::wstring> param = Split(Utf8ToWide(args), seperator);
 
         if (!browser) {
@@ -239,9 +240,9 @@ int httptest(int port) {
 
     svr.Post("/api/v1/attr", [](const Request &req, Response &res) {
         BrowserWindow* browser = getBrowse(req, res);
-        std::string id = TrimString(req.get_form_value("id"));
-        std::string val = TrimString(req.get_form_value("val"));
-        std::string attr = TrimString(req.get_form_value("attr"));
+        std::string id = trim(req.get_form_value("id"));
+        std::string val = trim(req.get_form_value("val"));
+        std::string attr = trim(req.get_form_value("attr"));
 
         if (!browser) {
            return ;
@@ -309,8 +310,8 @@ int httptest(int port) {
 
     svr.Post("/api/v1/cookie", [](const Request &req, Response &res) {
         BrowserWindow* browser = getBrowse(req, res);
-        std::string url = TrimString(req.get_form_value("url"));
-        std::string key = TrimString(req.get_form_value("key"));
+        std::string url = trim(req.get_form_value("url"));
+        std::string key = trim(req.get_form_value("key"));
 
         if (!browser) {
            return ;
@@ -339,7 +340,7 @@ int httptest(int port) {
 
     svr.Post("/api/v1/refresh", [](const Request &req, Response &res) {
         BrowserWindow* browser = getBrowse(req, res);
-        std::string level = TrimString(req.get_form_value("level"));
+        std::string level = trim(req.get_form_value("level"));
         int nLevel = level.empty() ? 0 : std::stoi(level);
 
         if (!browser) {

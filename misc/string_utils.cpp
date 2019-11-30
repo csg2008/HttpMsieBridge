@@ -6,7 +6,7 @@
 #include <vector>
 #include <sstream>
 #include <algorithm>
-#include <functional> 
+#include <functional>
 #include <cctype>
 #include <random>
 #include <stdio.h>
@@ -208,17 +208,7 @@ void ReplaceStringInPlace(std::string& subject, const std::string& search, const
          pos += replace.length();
     }
 }
-std::string &lTrimString(std::string &s) {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
-    return s;
-}
-std::string &rTrimString(std::string &s) {
-    s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
-    return s;
-}
-std::string TrimString(std::string s) {
-    return lTrimString(rTrimString(s));
-}
+
 std::vector<std::string> Split(const std::string &s, const std::string &seperator) {
     std::vector<std::string> result;
     std::string::size_type i = 0;

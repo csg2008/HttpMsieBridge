@@ -39,14 +39,13 @@ std::string UpperString(std::string str);
 
 std::string ReplaceString(std::string subject, const std::string& search, const std::string& replace);
 void ReplaceStringInPlace(std::string& subject, const std::string& search, const std::string& replace);
-std::string TrimString(std::string s);
 std::vector<std::string> Split(const std::string &s, const std::string &seperator);
 std::vector<std::wstring> Split(const std::wstring &s, const std::wstring &seperator);
 std::wstring string_to_wstring(const std::string& str);
 std::string wstring_to_string(const std::wstring& wStr);
 
 size_t replace(std::string& input, const std::string& from, const std::string& to);
-std::string trim(const std::string& str, const std::string& whitespace = " \t");
+std::string trim(const std::string& str, const std::string& whitespace = "\r\n\t ");
 std::string to_lower(const std::string& str);
 std::string to_upper(const std::string& str);
 std::string to_string(const bool& b);
