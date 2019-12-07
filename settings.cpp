@@ -39,15 +39,15 @@ nlohmann::json* GetApplicationSettings() {
     }
 
     if ((*ret)["integration"]["engine"].is_null()) {
-        (*ret)["integration"]["engine"] = "mb";
+        (*ret)["integration"]["engine"] = "msie";
     } else if ((*ret)["integration"]["engine"].is_string()) {
         if ("msie" != (*ret)["integration"]["engine"].get<std::string>() && "mb" != (*ret)["integration"]["engine"].get<std::string>()) {
             LOG_WARNING << "Gui engine must be msie or mb, give: " << (*ret)["integration"]["engine"];
-            (*ret)["integration"]["engine"] = "mb";
+            (*ret)["integration"]["engine"] = "msie";
         }
     } else {
         LOG_WARNING << "Gui engine must be msie or mb, give: " << (*ret)["integration"]["engine"];
-        (*ret)["integration"]["engine"] = "mb";
+        (*ret)["integration"]["engine"] = "msie";
     }
 
     std::string log_file = (*ret)["integration"]["log_file"];

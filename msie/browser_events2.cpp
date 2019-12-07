@@ -169,8 +169,8 @@ HRESULT STDMETHODCALLTYPE BrowserEvents2::Invoke(
             _ASSERT(pDispParams->cArgs == 1);
             _ASSERT(pDispParams->rgvarg[0].vt == VT_BSTR); // Text
             BSTR title = pDispParams->rgvarg[0].bstrVal;
-            // LOG_DEBUG << "BrowserEvents2::TitleChange(): "
-            //              "setting popup title = " << WideToUtf8(title);
+             LOG_DEBUG << "BrowserEvents2::TitleChange(): "
+                          "setting popup title = " << WideToUtf8(title);
             browserWindow_->SetTitle(title);
         }
     } else if (dispId == DISPID_BEFORENAVIGATE || dispId == DISPID_BEFORENAVIGATE2) {
