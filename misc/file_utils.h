@@ -10,7 +10,7 @@
 #include <shellapi.h>
 
 int closeProcess(LPSHELLEXECUTEINFO se);
-SHELLEXECUTEINFO exec(std::string exeFile, int num = 3, bool show = true, bool wait = false);
+SHELLEXECUTEINFO exec(std::string exeFile, int num = 3, bool show = true, bool wait = false, bool asAdmin = false);
 std::string GetExecutablePath();
 std::string GetExecutableName();
 std::string GetExecutableFilename();

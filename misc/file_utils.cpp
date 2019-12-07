@@ -18,18 +18,27 @@
 
 #pragma comment( lib, "shell32.lib")
 
-SHELLEXECUTEINFO exec(std::string exeFile, int num, bool show, bool wait) {
+SHELLEXECUTEINFO exec(std::string exeFile, int num, bool show, bool wait, bool asAdmin) {
+    int pid = 0;
     int times = 0;
+    bool succ = false;
     std::string::size_type pos = LowerString(exeFile).find(".exe");
 
-    SHELLEXECUTEINFO seInfo = {};
+    SHELLEXECUTEINFO seInfo = { 0 };;
     seInfo.cbSize = sizeof(seInfo);
     seInfo.lpDirectory = ConvertW(GetExecutableDirectory().c_str());
     seInfo.fMask = SEE_MASK_DOENVSUBST | SEE_MASK_FLAG_NO_UI | SEE_MASK_NO_CONSOLE | SEE_MASK_NOASYNC | SEE_MASK_NOCLOSEPROCESS;
-    seInfo.lpVerb = L"open";
+    seInfo.hwnd = 0;
+    seInfo.hInstApp = 0;
+
+    if (asAdmin)
+        seInfo.lpVerb = _T("runas");                // Operation to perform
+    else
+        seInfo.lpVerb = _T("open");
 
     if (pos + 4 >= exeFile.length()) {
         seInfo.lpFile = ConvertW(exeFile.c_str());
+        seInfo.lpParameters = _T("");                  // Additional parameters
     } else {
         seInfo.lpFile = ConvertW(exeFile.substr(0, pos+4).c_str());
         seInfo.lpParameters = ConvertW(exeFile.substr(pos+4).c_str());
@@ -43,6 +52,9 @@ SHELLEXECUTEINFO exec(std::string exeFile, int num, bool show, bool wait) {
     
     while (times < num) {
         if (ShellExecuteEx(&seInfo)) {
+            succ = true;
+            pid = GetProcessId(seInfo.hProcess);
+
             if (wait) {
                 WaitForSingleObject(seInfo.hProcess, INFINITE);
             }
@@ -53,7 +65,7 @@ SHELLEXECUTEINFO exec(std::string exeFile, int num, bool show, bool wait) {
         }
     }
 
-    LOG_INFO << "Executing " << exeFile << " finish, code: " << seInfo.hInstApp;
+    LOG_INFO << "Executing " << exeFile << " finish, code: " << seInfo.hInstApp << " pid:" << pid;
 
     return seInfo;
 }
