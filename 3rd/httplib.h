@@ -3,8 +3,7 @@
 //
 //  Copyright (c) 2019 Yuji Hirose. All rights reserved.
 //  MIT License
-//  source: https://github.com/yhirose/cpp-httplib
-//  rev: 2019-11-04 94d13e88a5b7162a4566aa01d77b9abce91d7448
+//
 
 #ifndef CPPHTTPLIB_HTTPLIB_H
 #define CPPHTTPLIB_HTTPLIB_H
@@ -68,9 +67,9 @@
 
 #if defined(_MSC_VER)
 #ifdef _WIN64
-typedef __int64 ssize_t;
+using ssize_t = __int64;
 #else
-typedef int ssize_t;
+using ssize_t = int;
 #endif
 
 #if _MSC_VER < 1900
@@ -106,7 +105,7 @@ typedef int ssize_t;
 #define strcasecmp _stricmp
 #endif // strcasecmp
 
-typedef SOCKET socket_t;
+using socket_t = SOCKET;
 #ifdef CPPHTTPLIB_USE_POLL
 #define poll(fds, nfds, timeout) WSAPoll(fds, nfds, timeout)
 #endif
@@ -120,18 +119,19 @@ typedef SOCKET socket_t;
 #ifdef CPPHTTPLIB_USE_POLL
 #include <poll.h>
 #endif
-#include <pthread.h>
 #include <csignal>
+#include <pthread.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
-typedef int socket_t;
+using socket_t = int;
 #define INVALID_SOCKET (-1)
 #endif //_WIN32
 
-#include <cassert>
+#include <array>
 #include <atomic>
+#include <cassert>
 #include <condition_variable>
 #include <errno.h>
 #include <fcntl.h>
@@ -146,8 +146,6 @@ typedef int socket_t;
 #include <string>
 #include <sys/stat.h>
 #include <thread>
-#include <array>
-#include <iostream>
 
 #ifdef CPPHTTPLIB_OPENSSL_SUPPORT
 #include <openssl/err.h>
@@ -198,13 +196,11 @@ using DataSink = std::function<void(const char *data, size_t data_len)>;
 
 using Done = std::function<void()>;
 
-using ContentProvider = std::function<void(size_t offset, size_t length, DataSink sink)>;
+using ContentProvider =
+    std::function<void(size_t offset, size_t length, DataSink sink)>;
 
-using ContentProviderWithCloser = std::function<void(size_t offset, size_t length, DataSink sink, Done done)>;
-
-using ContentReceiver = std::function<bool(const char *data, size_t data_length)>;
-
-using ContentReader = std::function<bool(ContentReceiver receiver)>;
+using ContentProviderWithCloser =
+    std::function<void(size_t offset, size_t length, DataSink sink, Done done)>;
 
 using Progress = std::function<bool(uint64_t current, uint64_t total)>;
 
@@ -214,8 +210,7 @@ using ResponseHandler = std::function<bool(const Response &response)>;
 struct MultipartFile {
   std::string filename;
   std::string content_type;
-  size_t offset = 0;
-  size_t length = 0;
+  std::string content;
 };
 using MultipartFiles = std::multimap<std::string, MultipartFile>;
 
@@ -226,6 +221,35 @@ struct MultipartFormData {
   std::string content_type;
 };
 using MultipartFormDataItems = std::vector<MultipartFormData>;
+
+using ContentReceiver =
+    std::function<bool(const char *data, size_t data_length)>;
+
+using MultipartContentHeader =
+    std::function<bool(const std::string &name, const MultipartFile &file)>;
+
+using MultipartContentReceiver =
+    std::function<bool(const std::string& name, const char *data, size_t data_length)>;
+
+class ContentReader {
+  public:
+    using Reader = std::function<bool(ContentReceiver receiver)>;
+    using MultipartReader = std::function<bool(MultipartContentHeader header, MultipartContentReceiver receiver)>;
+
+    ContentReader(Reader reader, MultipartReader muitlpart_reader)
+      : reader_(reader), muitlpart_reader_(muitlpart_reader) {}
+
+    bool operator()(MultipartContentHeader header, MultipartContentReceiver receiver) const {
+      return muitlpart_reader_(header, receiver);
+    }
+
+    bool operator()(ContentReceiver receiver) const {
+      return reader_(receiver);
+    }
+
+    Reader reader_;
+    MultipartReader muitlpart_reader_;
+};
 
 using Range = std::pair<ssize_t, ssize_t>;
 using Ranges = std::vector<Range>;
@@ -268,6 +292,8 @@ struct Request {
   bool has_form(const char *key) const;
   std::string get_form_value(const char *key, size_t id = 0) const;
   size_t get_form_value_count(const char *key) const;
+
+  bool is_multipart_form_data() const;
 
   bool has_file(const char *key) const;
   MultipartFile get_file_value(const char *key) const;
@@ -401,7 +427,7 @@ public:
     cond_.notify_all();
 
     // Join...
-    for (auto& t : threads_) {
+    for (auto &t : threads_) {
       t.join();
     }
   }
@@ -442,7 +468,7 @@ private:
   std::condition_variable cond_;
   std::mutex mutex_;
 };
-#else
+#elif CPPHTTPLIB_THREAD_POOL_COUNT == 0
 class Threads : public TaskQueue {
 public:
   Threads() : running_threads_(0) {}
@@ -476,13 +502,23 @@ private:
   std::mutex running_threads_mutex_;
   int running_threads_;
 };
+#else
+class NoThread : public TaskQueue {
+public:
+  NoThread() {}
+  virtual ~NoThread() {}
+
+  virtual void enqueue(std::function<void()> fn) override { fn(); }
+
+  virtual void shutdown() override {}
+};
 #endif
 
 class Server {
 public:
   using Handler = std::function<void(const Request &, Response &)>;
-  using HandlerWithContentReader = std::function<void(const Request &, Response &,
-                             const ContentReader &content_reader)>;
+  using HandlerWithContentReader = std::function<void(
+      const Request &, Response &, const ContentReader &content_reader)>;
   using Logger = std::function<void(const Request &, const Response &)>;
 
   Server();
@@ -501,7 +537,7 @@ public:
   Server &Delete(const char *pattern, Handler handler);
   Server &Options(const char *pattern, Handler handler);
 
-  bool set_base_dir(const char *path);
+  bool set_base_dir(const char *dir, const char *mount_point = nullptr);
   void set_file_request_handler(Handler handler);
 
   void set_error_handler(Handler handler);
@@ -525,7 +561,7 @@ public:
 protected:
   bool process_request(Stream &strm, bool last_connection,
                        bool &connection_close,
-                       const std::function<void(Request &)>& setup_request);
+                       const std::function<void(Request &)> &setup_request);
 
   size_t keep_alive_max_count_;
   time_t read_timeout_sec_;
@@ -533,16 +569,16 @@ protected:
   size_t payload_max_length_;
 
 private:
-  typedef std::vector<std::pair<std::regex, Handler>> Handlers;
-  typedef std::vector<std::pair<std::regex, HandlerWithContentReader>>
-      HandersForContentReader;
+  using Handlers = std::vector<std::pair<std::regex, Handler>>;
+  using HandersForContentReader =
+      std::vector<std::pair<std::regex, HandlerWithContentReader>>;
 
   socket_t create_server_socket(const char *host, int port,
                                 int socket_flags) const;
   int bind_internal(const char *host, int port, int socket_flags);
   bool listen_internal();
 
-  bool routing(Request &req, Response &res, ContentReader content_reader);
+  bool routing(Request &req, Response &res, Stream &strm, bool last_connection);
   bool handle_file_request(Request &req, Response &res);
   bool dispatch_request(Request &req, Response &res, Handlers &handlers);
   bool dispatch_request_for_content_reader(Request &req, Response &res,
@@ -559,21 +595,28 @@ private:
                     Response &res);
   bool read_content_with_content_receiver(Stream &strm, bool last_connection,
                                           Request &req, Response &res,
-                                          ContentReceiver reveiver);
+                                          ContentReceiver receiver,
+                                          MultipartContentHeader multipart_header,
+                                          MultipartContentReceiver multipart_receiver);
+  bool read_content_core(Stream &strm, bool last_connection,
+                         Request &req, Response &res,
+                         ContentReceiver receiver,
+                         MultipartContentHeader mulitpart_header,
+                         MultipartContentReceiver multipart_receiver);
 
   virtual bool process_and_close_socket(socket_t sock);
 
   std::atomic<bool> is_running_;
   std::atomic<socket_t> svr_sock_;
-  std::string base_dir_;
+  std::vector<std::pair<std::string, std::string>> base_dirs_;
   Handler file_request_handler_;
   Handlers get_handlers_;
   Handlers post_handlers_;
-  HandersForContentReader post_handlers_for_content_reader;
+  HandersForContentReader post_handlers_for_content_reader_;
   Handlers put_handlers_;
-  HandersForContentReader put_handlers_for_content_reader;
+  HandersForContentReader put_handlers_for_content_reader_;
   Handlers patch_handlers_;
-  HandersForContentReader patch_handlers_for_content_reader;
+  HandersForContentReader patch_handlers_for_content_reader_;
   Handlers delete_handlers_;
   Handlers options_handlers_;
   Handler error_handler_;
@@ -944,16 +987,6 @@ inline size_t to_utf8(int code, char *buff) {
   return 0;
 }
 
-static const std::string base64_chars = 
-             "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-             "abcdefghijklmnopqrstuvwxyz"
-             "0123456789+/";
-
-
-static inline bool is_base64(unsigned char c) {
-  return (isalnum(c) || (c == '+') || (c == '/'));
-}
-
 // NOTE: This code came up with the following stackoverflow post:
 // https://stackoverflow.com/questions/180947/base64-decode-snippet-in-c
 inline std::string base64_encode(const std::string &in) {
@@ -982,85 +1015,6 @@ inline std::string base64_encode(const std::string &in) {
   }
 
   return out;
-}
-
-
-inline std::string base64_encode(unsigned char const* bytes_to_encode, unsigned int in_len) {
-  std::string ret;
-  int i = 0;
-  int j = 0;
-  unsigned char char_array_3[3];
-  unsigned char char_array_4[4];
-
-  while (in_len--) {
-    char_array_3[i++] = *(bytes_to_encode++);
-    if (i == 3) {
-      char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
-      char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
-      char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
-      char_array_4[3] = char_array_3[2] & 0x3f;
-
-      for(i = 0; (i <4) ; i++)
-        ret += base64_chars[char_array_4[i]];
-      i = 0;
-    }
-  }
-
-  if (i)
-  {
-    for(j = i; j < 3; j++)
-      char_array_3[j] = '\0';
-
-    char_array_4[0] = ( char_array_3[0] & 0xfc) >> 2;
-    char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
-    char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
-
-    for (j = 0; (j < i + 1); j++)
-      ret += base64_chars[char_array_4[j]];
-
-    while((i++ < 3))
-      ret += '=';
-
-  }
-
-  return ret;
-}
-
-inline std::string base64_decode(std::string const& encoded_string) {
-  size_t in_len = encoded_string.size();
-  int i = 0;
-  int j = 0;
-  int in_ = 0;
-  unsigned char char_array_4[4], char_array_3[3];
-  std::string ret;
-
-  while (in_len-- && ( encoded_string[in_] != '=') && is_base64(encoded_string[in_])) {
-    char_array_4[i++] = encoded_string[in_]; in_++;
-    if (i ==4) {
-      for (i = 0; i <4; i++)
-        char_array_4[i] = base64_chars.find(char_array_4[i]) & 0xff;
-
-      char_array_3[0] = ( char_array_4[0] << 2       ) + ((char_array_4[1] & 0x30) >> 4);
-      char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
-      char_array_3[2] = ((char_array_4[2] & 0x3) << 6) +   char_array_4[3];
-
-      for (i = 0; (i < 3); i++)
-        ret += char_array_3[i];
-      i = 0;
-    }
-  }
-
-  if (i) {
-    for (j = 0; j < i; j++)
-      char_array_4[j] = base64_chars.find(char_array_4[j]) & 0xff;
-
-    char_array_3[0] = (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
-    char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
-
-    for (j = 0; (j < i - 1); j++) ret += char_array_3[j];
-  }
-
-  return ret;
 }
 
 inline bool is_file(const std::string &path) {
@@ -1163,6 +1117,11 @@ public:
     } else {
       return glowable_buffer_.size();
     }
+  }
+
+  bool end_with_crlf() const {
+    auto end = ptr() + size();
+    return size() >= 2 && end[-2] == '\r' && end[-1] == '\n';
   }
 
   bool getline() {
@@ -1275,7 +1234,8 @@ inline bool wait_until_socket_is_ready(socket_t sock, time_t sec, time_t usec) {
       (FD_ISSET(sock, &fdsr) || FD_ISSET(sock, &fdsw))) {
     int error = 0;
     socklen_t len = sizeof(error);
-    return getsockopt(sock, SOL_SOCKET, SO_ERROR, reinterpret_cast<char*>(&error), &len) >= 0 &&
+    return getsockopt(sock, SOL_SOCKET, SO_ERROR,
+                      reinterpret_cast<char *>(&error), &len) >= 0 &&
            !error;
   }
   return false;
@@ -1407,6 +1367,26 @@ inline bool is_connection_error() {
 #endif
 }
 
+inline socket_t create_client_socket(
+    const char *host, int port, time_t timeout_sec) {
+  return create_socket(
+      host, port, [=](socket_t sock, struct addrinfo &ai) -> bool {
+        set_nonblocking(sock, true);
+
+        auto ret = ::connect(sock, ai.ai_addr, static_cast<int>(ai.ai_addrlen));
+        if (ret < 0) {
+          if (is_connection_error() ||
+              !wait_until_socket_is_ready(sock, timeout_sec, 0)) {
+            close_socket(sock);
+            return false;
+          }
+        }
+
+        set_nonblocking(sock, false);
+        return true;
+      });
+}
+
 inline std::string get_remote_addr(socket_t sock) {
   struct sockaddr_storage addr;
   socklen_t len = sizeof(addr);
@@ -1414,8 +1394,8 @@ inline std::string get_remote_addr(socket_t sock) {
   if (!getpeername(sock, reinterpret_cast<struct sockaddr *>(&addr), &len)) {
     std::array<char, NI_MAXHOST> ipstr{};
 
-    if (!getnameinfo(reinterpret_cast<struct sockaddr *>(&addr), len, ipstr.data(), ipstr.size(),
-                     nullptr, 0, NI_NUMERICHOST)) {
+    if (!getnameinfo(reinterpret_cast<struct sockaddr *>(&addr), len,
+                     ipstr.data(), ipstr.size(), nullptr, 0, NI_NUMERICHOST)) {
       return ipstr.data();
     }
   }
@@ -1504,7 +1484,7 @@ inline bool compress(std::string &content) {
   std::array<char, 16384> buff{};
   do {
     strm.avail_out = buff.size();
-    strm.next_out = reinterpret_cast<Bytef*>(buff.data());
+    strm.next_out = reinterpret_cast<Bytef *>(buff.data());
     ret = deflate(&strm, Z_FINISH);
     assert(ret != Z_STREAM_ERROR);
     compressed.append(buff.data(), buff.size() - strm.avail_out);
@@ -1546,7 +1526,7 @@ public:
     std::array<char, 16384> buff{};
     do {
       strm.avail_out = buff.size();
-      strm.next_out = reinterpret_cast<Bytef*>(buff.data());
+      strm.next_out = reinterpret_cast<Bytef *>(buff.data());
 
       ret = inflate(&strm, Z_NO_FLUSH);
       assert(ret != Z_STREAM_ERROR);
@@ -1556,10 +1536,12 @@ public:
       case Z_MEM_ERROR: inflateEnd(&strm); return false;
       }
 
-      if (!callback(buff.data(), buff.size() - strm.avail_out)) { return false; }
+      if (!callback(buff.data(), buff.size() - strm.avail_out)) {
+        return false;
+      }
     } while (strm.avail_out == 0);
 
-    return ret == Z_STREAM_END;
+    return ret == Z_OK || ret == Z_STREAM_END;
   }
 
 private:
@@ -1590,18 +1572,35 @@ inline uint64_t get_header_value_uint64(const Headers &headers, const char *key,
 }
 
 inline bool read_headers(Stream &strm, Headers &headers) {
-  static std::regex re(R"((.+?):\s*(.+?)\s*\r\n)");
-
   const auto bufsiz = 2048;
   char buf[bufsiz];
-
   stream_line_reader line_reader(strm, buf, bufsiz);
 
   for (;;) {
     if (!line_reader.getline()) { return false; }
-    if (!strcmp(line_reader.ptr(), "\r\n")) { break; }
+
+    // Check if the line ends with CRLF.
+    if (line_reader.end_with_crlf()) {
+      // Blank line indicates end of headers.
+      if (line_reader.size() == 2) { break; }
+    } else {
+      continue; // Skip invalid line.
+    }
+
+    // Skip trailing spaces and tabs.
+    auto end = line_reader.ptr() + line_reader.size() - 2;
+    while (line_reader.ptr() < end && (end[-1] == ' ' || end[-1] == '\t')) {
+      end--;
+    }
+
+    // Horizontal tab and ' ' are considered whitespace and are ignored when on
+    // the left or right side of the header value:
+    //  - https://stackoverflow.com/questions/50179659/
+    //  - https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html
+    static const std::regex re(R"((.+?):[\t ]*(.+))");
+
     std::cmatch m;
-    if (std::regex_match(line_reader.ptr(), m, re)) {
+    if (std::regex_match(line_reader.ptr(), end, m, re)) {
       auto key = std::string(m[1]);
       auto val = std::string(m[2]);
       headers.emplace(key, val);
@@ -1928,113 +1927,211 @@ inline bool parse_multipart_boundary(const std::string &content_type,
   return true;
 }
 
-inline bool parse_multipart_formdata(const std::string &boundary,
-                                     const std::string &body,
-                                     MultipartFiles &files) {
-  static std::string dash = "--";
-  static std::string crlf = "\r\n";
+inline bool parse_range_header(const std::string &s, Ranges &ranges) {
+  static auto re_first_range =
+      std::regex(R"(bytes=(\d*-\d*(?:,\s*\d*-\d*)*))");
+  std::smatch m;
+  if (std::regex_match(s, m, re_first_range)) {
+    auto pos = m.position(1);
+    auto len = m.length(1);
+    bool all_valid_ranges = true;
+    detail::split(
+        &s[pos], &s[pos + len], ',', [&](const char *b, const char *e) {
+          if (!all_valid_ranges) return;
+          static auto re_another_range = std::regex(R"(\s*(\d*)-(\d*))");
+          std::cmatch m;
+          if (std::regex_match(b, e, m, re_another_range)) {
+            ssize_t first = -1;
+            if (!m.str(1).empty()) {
+              first = static_cast<ssize_t>(std::stoll(m.str(1)));
+            }
 
-  static std::regex re_content_type("Content-Type: (.*?)$",
-                                    std::regex_constants::icase);
+            ssize_t last = -1;
+            if (!m.str(2).empty()) {
+              last = static_cast<ssize_t>(std::stoll(m.str(2)));
+            }
 
-  static std::regex re_content_disposition(
-      "Content-Disposition: form-data; name=\"(.*?)\"(?:; filename=\"(.*?)\")?",
-      std::regex_constants::icase);
+            if (first != -1 && last != -1 && first > last) {
+              all_valid_ranges = false;
+              return;
+            }
+            ranges.emplace_back(std::make_pair(first, last));
+          }
+        });
+    return all_valid_ranges;
+  }
+  return false;
+}
 
-  auto dash_boundary = dash + boundary;
+class MultipartFormDataParser {
+public:
+  MultipartFormDataParser() {}
 
-  auto pos = body.find(dash_boundary);
-  if (pos != 0) { return false; }
-
-  pos += dash_boundary.size();
-
-  auto next_pos = body.find(crlf, pos);
-  if (next_pos == std::string::npos) { return false; }
-
-  pos = next_pos + crlf.size();
-
-  while (pos < body.size()) {
-    next_pos = body.find(crlf, pos);
-    if (next_pos == std::string::npos) { return false; }
-
-    std::string name;
-    MultipartFile file;
-
-    auto header = body.substr(pos, (next_pos - pos));
-
-    while (pos != next_pos) {
-      std::smatch m;
-      if (std::regex_match(header, m, re_content_type)) {
-        file.content_type = m[1];
-      } else if (std::regex_match(header, m, re_content_disposition)) {
-        name = m[1];
-        file.filename = m[2];
-      }
-
-      pos = next_pos + crlf.size();
-
-      next_pos = body.find(crlf, pos);
-      if (next_pos == std::string::npos) { return false; }
-
-      header = body.substr(pos, (next_pos - pos));
-    }
-
-    pos = next_pos + crlf.size();
-
-    next_pos = body.find(crlf + dash_boundary, pos);
-
-    if (next_pos == std::string::npos) { return false; }
-
-    file.offset = pos;
-    file.length = next_pos - pos;
-
-    pos = next_pos + crlf.size() + dash_boundary.size();
-
-    next_pos = body.find(crlf, pos);
-    if (next_pos == std::string::npos) { return false; }
-
-    files.emplace(name, file);
-
-    pos = next_pos + crlf.size();
+  void set_boundary(const std::string &boundary) {
+    boundary_ = boundary;
   }
 
-  return true;
-}
+  bool is_valid() const { return is_valid_; }
 
-inline bool parse_range_header(const std::string &s, Ranges &ranges) {
-  try {
-    static auto re_first_range =
-        std::regex(R"(bytes=(\d*-\d*(?:,\s*\d*-\d*)*))");
-    std::smatch m;
-    if (std::regex_match(s, m, re_first_range)) {
-      auto pos = m.position(1);
-      auto len = m.length(1);
-      detail::split(
-          &s[pos], &s[pos + len], ',', [&](const char *b, const char *e) {
-            static auto re_another_range = std::regex(R"(\s*(\d*)-(\d*))");
-            std::cmatch m;
-            if (std::regex_match(b, e, m, re_another_range)) {
-              ssize_t first = -1;
-              if (!m.str(1).empty()) {
-                first = static_cast<ssize_t>(std::stoll(m.str(1)));
-              }
+  template <typename T, typename U>
+  bool parse(const char *buf, size_t n, T content_callback, U header_callback) {
+    static const std::regex re_content_type(R"(^Content-Type:\s*(.*?)\s*$)",
+                                            std::regex_constants::icase);
 
-              ssize_t last = -1;
-              if (!m.str(2).empty()) {
-                last = static_cast<ssize_t>(std::stoll(m.str(2)));
-              }
+    static const std::regex re_content_disposition(
+        "^Content-Disposition:\\s*form-data;\\s*name=\"(.*?)\"(?:;\\s*filename="
+        "\"(.*?)\")?\\s*$",
+        std::regex_constants::icase);
 
-              if (first != -1 && last != -1 && first > last) {
-                throw std::runtime_error("invalid range error");
-              }
-              ranges.emplace_back(std::make_pair(first, last));
+    buf_.append(buf, n); // TODO: performance improvement
+
+    while (!buf_.empty()) {
+      switch (state_) {
+      case 0: { // Initial boundary
+        auto pattern = dash_ + boundary_ + crlf_;
+        if (pattern.size() > buf_.size()) { return true; }
+        auto pos = buf_.find(pattern);
+        if (pos != 0) {
+          is_done_ = true;
+          return false;
+        }
+        buf_.erase(0, pattern.size());
+        off_ += pattern.size();
+        state_ = 1;
+        break;
+      }
+      case 1: { // New entry
+        clear_file_info();
+        state_ = 2;
+        break;
+      }
+      case 2: { // Headers
+        auto pos = buf_.find(crlf_);
+        while (pos != std::string::npos) {
+          if (pos == 0) {
+            if (!header_callback(name_, file_)) {
+              is_valid_ = false;
+              is_done_ = false;
+              return false;
             }
-          });
-      return true;
+            buf_.erase(0, crlf_.size());
+            off_ += crlf_.size();
+            state_ = 3;
+            break;
+          }
+
+          auto header = buf_.substr(0, pos);
+          {
+            std::smatch m;
+            if (std::regex_match(header, m, re_content_type)) {
+              file_.content_type = m[1];
+            } else if (std::regex_match(header, m, re_content_disposition)) {
+              name_ = m[1];
+              file_.filename = m[2];
+            }
+          }
+
+          buf_.erase(0, pos + crlf_.size());
+          off_ += pos + crlf_.size();
+          pos = buf_.find(crlf_);
+        }
+        break;
+      }
+      case 3: { // Body
+        {
+          auto pattern = crlf_ + dash_;
+          auto pos = buf_.find(pattern);
+          if (pos == std::string::npos) {
+            pos = buf_.size();
+          }
+          if (!content_callback(name_, buf_.data(), pos)) {
+            is_valid_ = false;
+            is_done_ = false;
+            return false;
+          }
+
+          off_ += pos;
+          buf_.erase(0, pos);
+        }
+
+        {
+          auto pattern = crlf_ + dash_ + boundary_;
+          if (pattern.size() > buf_.size()) { return true; }
+
+          auto pos = buf_.find(pattern);
+          if (pos != std::string::npos) {
+            if (!content_callback(name_, buf_.data(), pos)) {
+              is_valid_ = false;
+              is_done_ = false;
+              return false;
+            }
+
+            off_ += pos + pattern.size();
+            buf_.erase(0, pos + pattern.size());
+            state_ = 4;
+          } else {
+            if (!content_callback(name_, buf_.data(), pattern.size())) {
+              is_valid_ = false;
+              is_done_ = false;
+              return false;
+            }
+
+            off_ += pattern.size();
+            buf_.erase(0, pattern.size());
+          }
+        }
+        break;
+      }
+      case 4: { // Boundary
+        if (crlf_.size() > buf_.size()) { return true; }
+        if (buf_.find(crlf_) == 0) {
+          buf_.erase(0, crlf_.size());
+          off_ += crlf_.size();
+          state_ = 1;
+        } else {
+          auto pattern = dash_ + crlf_;
+          if (pattern.size() > buf_.size()) { return true; }
+          if (buf_.find(pattern) == 0) {
+            buf_.erase(0, pattern.size());
+            off_ += pattern.size();
+            is_valid_ = true;
+            state_ = 5;
+          } else {
+            is_done_ = true;
+            return true;
+          }
+        }
+        break;
+      }
+      case 5: { // Done
+        is_valid_ = false;
+        return false;
+      }
+      }
     }
-    return false;
-  } catch (...) { return false; }
-}
+
+    return true;
+  }
+
+private:
+  void clear_file_info() {
+    name_.clear();
+    file_.filename.clear();
+    file_.content_type.clear();
+  }
+
+  const std::string dash_ = "--";
+  const std::string crlf_ = "\r\n";
+  std::string boundary_;
+
+  std::string buf_;
+  size_t state_ = 0;
+  size_t is_valid_ = false;
+  size_t is_done_ = false;
+  size_t off_ = 0;
+  std::string name_;
+  MultipartFile file_;
+};
 
 inline std::string to_lower(const char *beg, const char *end) {
   std::string out;
@@ -2186,6 +2283,15 @@ get_range_offset_and_length(const Request &req, const Response &res,
   return std::make_pair(r.first, r.second - r.first + 1);
 }
 
+inline bool expect_content(const Request &req) {
+  if (req.method == "POST" || req.method == "PUT" || req.method == "PATCH" ||
+      req.method == "PRI") {
+    return true;
+  }
+  // TODO: check if Content-Length is set
+  return false;
+}
+
 #ifdef _WIN32
 class WSInit {
 public:
@@ -2275,6 +2381,11 @@ inline std::string Request::get_form_value(const char *key, size_t id) const {
 inline size_t Request::get_form_value_count(const char *key) const {
   auto r = form.equal_range(key);
   return std::distance(r.first, r.second);
+}
+
+inline bool Request::is_multipart_form_data() const {
+  const auto &content_type = get_header_value("Content-Type");
+  return !content_type.find("multipart/form-data");
 }
 
 inline bool Request::has_file(const char *key) const {
@@ -2447,8 +2558,10 @@ inline Server::Server()
   new_task_queue = [] {
 #if CPPHTTPLIB_THREAD_POOL_COUNT > 0
     return new ThreadPool(CPPHTTPLIB_THREAD_POOL_COUNT);
-#else
+#elif CPPHTTPLIB_THREAD_POOL_COUNT == 0
     return new Threads();
+#else
+    return new NoThread();
 #endif
   };
 }
@@ -2467,7 +2580,7 @@ inline Server &Server::Post(const char *pattern, Handler handler) {
 
 inline Server &Server::Post(const char *pattern,
                             HandlerWithContentReader handler) {
-  post_handlers_for_content_reader.push_back(
+  post_handlers_for_content_reader_.push_back(
       std::make_pair(std::regex(pattern), handler));
   return *this;
 }
@@ -2479,7 +2592,7 @@ inline Server &Server::Put(const char *pattern, Handler handler) {
 
 inline Server &Server::Put(const char *pattern,
                            HandlerWithContentReader handler) {
-  put_handlers_for_content_reader.push_back(
+  put_handlers_for_content_reader_.push_back(
       std::make_pair(std::regex(pattern), handler));
   return *this;
 }
@@ -2491,7 +2604,7 @@ inline Server &Server::Patch(const char *pattern, Handler handler) {
 
 inline Server &Server::Patch(const char *pattern,
                              HandlerWithContentReader handler) {
-  patch_handlers_for_content_reader.push_back(
+  patch_handlers_for_content_reader_.push_back(
       std::make_pair(std::regex(pattern), handler));
   return *this;
 }
@@ -2506,10 +2619,13 @@ inline Server &Server::Options(const char *pattern, Handler handler) {
   return *this;
 }
 
-inline bool Server::set_base_dir(const char *path) {
-  if (detail::is_dir(path)) {
-    base_dir_ = path;
-    return true;
+inline bool Server::set_base_dir(const char *dir, const char *mount_point) {
+  if (detail::is_dir(dir)) {
+    std::string mnt = mount_point ? mount_point : "/";
+    if (!mnt.empty() && mnt[0] == '/') {
+      base_dirs_.emplace_back(mnt, dir);
+      return true;
+    }
   }
   return false;
 }
@@ -2565,7 +2681,7 @@ inline void Server::stop() {
 inline bool Server::parse_request_line(const char *s, Request &req) {
   static std::regex re(
       "(GET|HEAD|POST|PUT|DELETE|CONNECT|OPTIONS|TRACE|PATCH|PRI) "
-      "(([^?]+)(?:\\?(.+?))?) (HTTP/1\\.[01])\r\n");
+      "(([^?]+)(?:\\?(.*?))?) (HTTP/1\\.[01])\r\n");
 
   std::cmatch m;
   if (std::regex_match(s, m, re)) {
@@ -2741,25 +2857,78 @@ Server::write_content_with_provider(Stream &strm, const Request &req,
 
 inline bool Server::read_content(Stream &strm, bool last_connection,
                                  Request &req, Response &res) {
+  auto ret = read_content_core(strm, last_connection, req, res,
+    // Regular
+    [&](const char *buf, size_t n) {
+      if (req.body.size() + n > req.body.max_size()) { return false; }
+      req.body.append(buf, n);
+      return true;
+    },
+    // Multipart
+    [&](const std::string &name, const MultipartFile &file) {
+      req.files.emplace(name, file);
+      return true;
+    },
+    [&](const std::string &name, const char *buf, size_t n) {
+      // TODO: handle elements with a same key
+      auto it = req.files.find(name);
+      auto &content = it->second.content;
+      if (content.size() + n > content.max_size()) { return false; }
+      content.append(buf, n);
+      return true;
+    }
+  );
+
+  const auto &content_type = req.get_header_value("Content-Type");
+  if (!content_type.find("application/x-www-form-urlencoded")) {
+    detail::parse_query_text(req.body, req.form);
+  }
+
+  return ret;
+}
+
+inline bool
+Server::read_content_with_content_receiver(Stream &strm, bool last_connection,
+                                           Request &req, Response &res,
+                                           ContentReceiver receiver,
+                                           MultipartContentHeader multipart_header,
+                                           MultipartContentReceiver multipart_receiver) {
+  return read_content_core(strm, last_connection, req, res,
+      receiver, multipart_header, multipart_receiver);
+}
+
+inline bool
+Server::read_content_core(Stream &strm, bool last_connection,
+                          Request &req, Response &res,
+                          ContentReceiver receiver,
+                          MultipartContentHeader mulitpart_header,
+                          MultipartContentReceiver multipart_receiver) {
+  detail::MultipartFormDataParser multipart_form_data_parser;
+  ContentReceiver out;
+
+  if (req.is_multipart_form_data()) {
+    const auto &content_type = req.get_header_value("Content-Type");
+    std::string boundary;
+    if (!detail::parse_multipart_boundary(content_type, boundary)) {
+      res.status = 400;
+      return write_response(strm, last_connection, req, res);
+    }
+
+    multipart_form_data_parser.set_boundary(boundary);
+    out = [&](const char *buf, size_t n) {
+      return multipart_form_data_parser.parse(buf, n, multipart_receiver, mulitpart_header);
+    };
+  } else {
+    out = receiver;
+  }
+
   if (!detail::read_content(strm, req, payload_max_length_, res.status,
-                            Progress(), [&](const char *buf, size_t n) {
-                              if (req.body.size() + n > req.body.max_size()) {
-                                return false;
-                              }
-                              req.body.append(buf, n);
-                              return true;
-                            })) {
+                            Progress(), out)) {
     return write_response(strm, last_connection, req, res);
   }
 
-  const auto &content_type = req.get_header_value("Content-Type");
-
-  if (!content_type.find("application/x-www-form-urlencoded")) {
-    detail::parse_query_text(req.body, req.form);
-  } else if (!content_type.find("multipart/form-data")) {
-    std::string boundary;
-    if (!detail::parse_multipart_boundary(content_type, boundary) ||
-        !detail::parse_multipart_formdata(boundary, req.body, req.files)) {
+  if (req.is_multipart_form_data()) {
+    if (!multipart_form_data_parser.is_valid()) {
       res.status = 400;
       return write_response(strm, last_connection, req, res);
     }
@@ -2768,35 +2937,29 @@ inline bool Server::read_content(Stream &strm, bool last_connection,
   return true;
 }
 
-inline bool
-Server::read_content_with_content_receiver(Stream &strm, bool last_connection,
-                                           Request &req, Response &res,
-                                           ContentReceiver receiver) {
-  if (!detail::read_content(
-          strm, req, payload_max_length_, res.status, Progress(),
-          [&](const char *buf, size_t n) { return receiver(buf, n); })) {
-    return write_response(strm, last_connection, req, res);
-  }
-
-  return true;
-}
-
 inline bool Server::handle_file_request(Request &req, Response &res) {
-  if (!base_dir_.empty() && detail::is_valid_path(req.path)) {
-    std::string path = base_dir_ + req.path;
+  for (const auto &kv : base_dirs_) {
+    const auto &mount_point = kv.first;
+    const auto &base_dir = kv.second;
 
-    if (!path.empty() && path.back() == '/') { path += "index.html"; }
+    // Prefix match
+    if (!req.path.find(mount_point)) {
+      std::string sub_path = "/" + req.path.substr(mount_point.size());
+      if (detail::is_valid_path(sub_path)) {
+        auto path = base_dir + sub_path;
+        if (path.back() == '/') { path += "index.html"; }
 
-    if (detail::is_file(path)) {
-      detail::read_file(path, res.body);
-      auto type = detail::find_content_type(path);
-      if (type) { res.set_header("Content-Type", type); }
-      res.status = 200;
-      if (file_request_handler_) { file_request_handler_(req, res); }
-      return true;
+        if (detail::is_file(path)) {
+          detail::read_file(path, res.body);
+          auto type = detail::find_content_type(path);
+          if (type) { res.set_header("Content-Type", type); }
+          res.status = 200;
+          if (file_request_handler_) { file_request_handler_(req, res); }
+          return true;
+        }
+      }
     }
   }
-
   return false;
 }
 
@@ -2832,7 +2995,8 @@ inline int Server::bind_internal(const char *host, int port, int socket_flags) {
     if (address.ss_family == AF_INET) {
       return ntohs(reinterpret_cast<struct sockaddr_in *>(&address)->sin_port);
     } else if (address.ss_family == AF_INET6) {
-      return ntohs(reinterpret_cast<struct sockaddr_in6 *>(&address)->sin6_port);
+      return ntohs(
+          reinterpret_cast<struct sockaddr_in6 *>(&address)->sin6_port);
     } else {
       return -1;
     }
@@ -2888,31 +3052,46 @@ inline bool Server::listen_internal() {
   return ret;
 }
 
-inline bool Server::routing(Request &req, Response &res,
-                            ContentReader content_reader) {
+inline bool Server::routing(Request &req, Response &res, Stream &strm,
+                            bool last_connection) {
   // File handler
   if (req.method == "GET" && handle_file_request(req, res)) { return true; }
 
-  // Content reader handler
-  if (req.method == "POST") {
-    if (dispatch_request_for_content_reader(req, res, content_reader,
-                                            post_handlers_for_content_reader)) {
-      return true;
-    }
-  } else if (req.method == "PUT") {
-    if (dispatch_request_for_content_reader(req, res, content_reader,
-                                            put_handlers_for_content_reader)) {
-      return true;
-    }
-  } else if (req.method == "PATCH") {
-    if (dispatch_request_for_content_reader(
-            req, res, content_reader, patch_handlers_for_content_reader)) {
-      return true;
-    }
-  }
+  if (detail::expect_content(req)) {
+    // Content reader handler
+    {
+      ContentReader reader(
+        [&](ContentReceiver receiver) {
+          return read_content_with_content_receiver(strm, last_connection, req, res,
+                                                    receiver, nullptr, nullptr);
+        },
+        [&](MultipartContentHeader header, MultipartContentReceiver receiver) {
+          return read_content_with_content_receiver(strm, last_connection, req, res,
+                                                    nullptr, header, receiver);
+        }
+      );
 
-  // Read content into `req.body`
-  if (!content_reader(nullptr)) { return false; }
+      if (req.method == "POST") {
+        if (dispatch_request_for_content_reader(
+                req, res, reader, post_handlers_for_content_reader_)) {
+          return true;
+        }
+      } else if (req.method == "PUT") {
+        if (dispatch_request_for_content_reader(
+                req, res, reader, put_handlers_for_content_reader_)) {
+          return true;
+        }
+      } else if (req.method == "PATCH") {
+        if (dispatch_request_for_content_reader(
+                req, res, reader, patch_handlers_for_content_reader_)) {
+          return true;
+        }
+      }
+    }
+
+    // Read content into `req.body`
+    if (!read_content(strm, last_connection, req, res)) { return false; }
+  }
 
   // Regular handler
   if (req.method == "GET" || req.method == "HEAD") {
@@ -2966,7 +3145,7 @@ Server::dispatch_request_for_content_reader(Request &req, Response &res,
 inline bool
 Server::process_request(Stream &strm, bool last_connection,
                         bool &connection_close,
-                        const std::function<void(Request &)>& setup_request) {
+                        const std::function<void(Request &)> &setup_request) {
   std::array<char, 2048> buf{};
 
   detail::stream_line_reader line_reader(strm, buf.data(), buf.size());
@@ -3014,23 +3193,8 @@ Server::process_request(Stream &strm, bool last_connection,
 
   if (setup_request) { setup_request(req); }
 
-  // Body
-  ContentReader content_reader = [&](ContentReceiver receiver) {
-    if (req.method == "POST" || req.method == "PUT" || req.method == "PATCH") {
-      if (receiver) {
-        return read_content_with_content_receiver(strm, last_connection, req,
-                                                  res, receiver);
-      } else {
-        return read_content(strm, last_connection, req, res);
-      }
-    } else if (req.method == "PRI") {
-      return read_content(strm, last_connection, req, res);
-    }
-    return true;
-  };
-
   // Rounting
-  if (routing(req, res, content_reader)) {
+  if (routing(req, res, strm, last_connection)) {
     if (res.status == -1) { res.status = req.ranges.empty() ? 200 : 206; }
   } else {
     if (res.status == -1) { res.status = 404; }
@@ -3064,22 +3228,7 @@ inline Client::~Client() {}
 inline bool Client::is_valid() const { return true; }
 
 inline socket_t Client::create_client_socket() const {
-  return detail::create_socket(
-      host_.c_str(), port_, [=](socket_t sock, struct addrinfo &ai) -> bool {
-        detail::set_nonblocking(sock, true);
-
-        auto ret = connect(sock, ai.ai_addr, static_cast<int>(ai.ai_addrlen));
-        if (ret < 0) {
-          if (detail::is_connection_error() ||
-              !detail::wait_until_socket_is_ready(sock, timeout_sec_, 0)) {
-            detail::close_socket(sock);
-            return false;
-          }
-        }
-
-        detail::set_nonblocking(sock, false);
-        return true;
-      });
+  return detail::create_client_socket(host_.c_str(), port_, timeout_sec_);
 }
 
 inline bool Client::read_response_line(Stream &strm, Response &res) {
@@ -3436,7 +3585,8 @@ inline std::shared_ptr<Response> Client::Get(const char *path,
                                              ResponseHandler response_handler,
                                              ContentReceiver content_receiver) {
   Progress dummy;
-  return Get(path, headers, std::move(response_handler), content_receiver, dummy);
+  return Get(path, headers, std::move(response_handler), content_receiver,
+             dummy);
 }
 
 inline std::shared_ptr<Response> Client::Get(const char *path,
