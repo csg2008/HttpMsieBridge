@@ -22,7 +22,7 @@ char* Trim(char *src);
 wchar_t* ConvertW(const char* in);
 std::string TCHAR2STRING(TCHAR *STR);
 wchar_t* char_to_wchar(const char *s);
-char* wchar_to_char(wchar_t *ws);
+char* wchar_to_char(const wchar_t *ws);
 
 void Utf8ToWide(const char* charString, wchar_t* wideString, int wideSize);
 std::wstring Utf8ToWide(const char* utf8String);

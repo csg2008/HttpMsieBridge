@@ -980,13 +980,6 @@ bool BrowserWindow::IsPopup() {
         return true;
     return false;
 }
-bool BrowserWindow::IsUsingMetaTitle() {
-    if (IsPopup()) {
-        nlohmann::json* settings = GetApplicationSettings();
-        return !(*settings)["window"]["fixed_title"].is_string() || (*settings)["window"]["fixed_title"].get<std::string>().empty();
-    }
-    return false;
-}
 void BrowserWindow::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     // Need to re-attach click events after each browser navigation.
     TryAttachClickEvents();

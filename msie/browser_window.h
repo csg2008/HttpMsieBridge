@@ -87,7 +87,6 @@ public:
     void SetLeft(long left);
     void SetTitle(const wchar_t* title);
     bool IsPopup();
-    bool IsUsingMetaTitle();
     void OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam);
     void OnGetMinMaxInfo(UINT uMsg, WPARAM wParam, LPARAM lParam);
     void OnResize(UINT uMsg, WPARAM wParam, LPARAM lParam);

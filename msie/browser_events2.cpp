@@ -165,14 +165,12 @@ HRESULT STDMETHODCALLTYPE BrowserEvents2::Invoke(
         // LOG_DEBUG << "BrowserEvents2::WindowSetLeft(): left = " << left;
         browserWindow_->SetLeft(left);
     } else if (dispId == DISPID_TITLECHANGE) {
-        if (browserWindow_->IsPopup() && browserWindow_->IsUsingMetaTitle()) {
-            _ASSERT(pDispParams->cArgs == 1);
-            _ASSERT(pDispParams->rgvarg[0].vt == VT_BSTR); // Text
-            BSTR title = pDispParams->rgvarg[0].bstrVal;
-             LOG_DEBUG << "BrowserEvents2::TitleChange(): "
-                          "setting popup title = " << WideToUtf8(title);
-            browserWindow_->SetTitle(title);
-        }
+        _ASSERT(pDispParams->cArgs == 1);
+        _ASSERT(pDispParams->rgvarg[0].vt == VT_BSTR); // Text
+        BSTR title = pDispParams->rgvarg[0].bstrVal;
+        browserWindow_->SetTitle(title);
+
+        // LOG_DEBUG << "BrowserEvents2::TitleChange(): setting popup title = " << WideToUtf8(title);
     } else if (dispId == DISPID_BEFORENAVIGATE || dispId == DISPID_BEFORENAVIGATE2) {
         if (pDispParams->cArgs != 7) {
             LOG_WARNING << "BrowserEvents2::BeforeNavigate() failed: Expected 7 arguments";

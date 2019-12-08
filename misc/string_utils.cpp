@@ -119,7 +119,7 @@ wchar_t* char_to_wchar(const char *s) {
   return ws;
 }
 
-char* wchar_to_char(wchar_t *ws) {
+char* wchar_to_char(const wchar_t *ws) {
   int n = WideCharToMultiByte(CP_UTF8, 0, ws, -1, NULL, 0, NULL, NULL);
   char *s = (char *)GlobalAlloc(GMEM_FIXED, n);
   if (s == NULL) {
