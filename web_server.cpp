@@ -256,7 +256,7 @@ int httptest(int port) {
             _variant_t varResult;
             bool ret = browser -> GetElementAttrByID(Utf8ToWide(id), Utf8ToWide(attr), &varResult);
 
-            res.set_content(ret ? wchar_to_char(varResult.bstrVal) : "", "text/plain");
+            res.set_content(ret ? ConvertA(varResult.bstrVal) : "", "text/plain");
         } else {
             bool ret = browser -> SetElementAttrByID(Utf8ToWide(id), Utf8ToWide(attr), Utf8ToWide(val));
 

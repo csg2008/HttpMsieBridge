@@ -405,7 +405,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrCm
         }
 
         window = new HttpBridge::CMiniblink(hInstance, settings);
-        window->load(char_to_wchar(homepage.c_str()));
+        window->load(ConvertW(homepage.c_str()));
         window->show();
 
         g_hwnd = window->GetHWND();

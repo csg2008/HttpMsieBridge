@@ -19,10 +19,9 @@ void rtrim(std::string &v);
 void trim(std::string &v);
 
 char* Trim(char *src);
+char* ConvertA(const wchar_t *ws);
 wchar_t* ConvertW(const char* in);
 std::string TCHAR2STRING(TCHAR *STR);
-wchar_t* char_to_wchar(const char *s);
-char* wchar_to_char(const wchar_t *ws);
 
 void Utf8ToWide(const char* charString, wchar_t* wideString, int wideSize);
 std::wstring Utf8ToWide(const char* utf8String);
@@ -41,8 +40,6 @@ std::string ReplaceString(std::string subject, const std::string& search, const 
 void ReplaceStringInPlace(std::string& subject, const std::string& search, const std::string& replace);
 std::vector<std::string> Split(const std::string &s, const std::string &seperator);
 std::vector<std::wstring> Split(const std::wstring &s, const std::wstring &seperator);
-std::wstring string_to_wstring(const std::string& str);
-std::string wstring_to_string(const std::wstring& wStr);
 
 size_t replace(std::string& input, const std::string& from, const std::string& to);
 std::string trim(const std::string& str, const std::string& whitespace = "\r\n\t ");

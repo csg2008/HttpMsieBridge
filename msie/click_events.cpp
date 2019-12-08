@@ -135,7 +135,7 @@ HRESULT STDMETHODCALLTYPE ClickEvents::Invoke(
             eventReturn.vt = VT_BOOL;
             eventReturn.boolVal = VARIANT_FALSE;
             htmlEvent->put_returnValue(eventReturn);
-            LOG_WARNING << "Shell open url:" << wchar_to_char(href);
+            LOG_WARNING << "Shell open url:" << ConvertA(href);
             ShellExecute(0, L"open", href, 0, 0, SW_SHOWNORMAL);
         }
     }
