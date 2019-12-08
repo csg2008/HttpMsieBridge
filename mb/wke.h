@@ -192,6 +192,7 @@ typedef enum _wkeMenuItemId {
     kWkeMenuGoForwardId = 1 << 9,
     kWkeMenuGoBackId = 1 << 10,
     kWkeMenuReloadId = 1 << 11,
+    kWkeMenuSaveImageId = 1 << 12,
 } wkeMenuItemId;
 
 typedef void* (WKE_CALL_TYPE *FILE_OPEN_) (const char* path);
@@ -901,6 +902,7 @@ public:
 
 #define WKE_FOR_EACH_DEFINE_FUNCTION(ITERATOR0, ITERATOR1, ITERATOR2, ITERATOR3, ITERATOR4, ITERATOR5, ITERATOR6, ITERATOR11) \
     ITERATOR0(void, wkeShutdown, "") \
+    ITERATOR0(void, wkeShutdownForDebug, "测试使用，不了解千万别用！") \
     \
     ITERATOR0(unsigned int, wkeVersion, "") \
     ITERATOR0(const utf8*, wkeVersionString, "") \
@@ -1034,6 +1036,7 @@ public:
     \
     ITERATOR1(int, wkeGetWebviewId, wkeWebView webView, "") \
     ITERATOR1(bool, wkeIsWebviewAlive, int id, "") \
+    ITERATOR1(bool, wkeIsWebviewValid, wkeWebView webView, "") \
     \
     ITERATOR3(const utf8*, wkeGetDocumentCompleteURL, wkeWebView webView, wkeWebFrameHandle frameId, const utf8* partialURL, "") \
     \
