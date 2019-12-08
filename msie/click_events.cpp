@@ -127,17 +127,17 @@ HRESULT STDMETHODCALLTYPE ClickEvents::Invoke(
         // Href attribute found. When not found vt is VT_NULL.
         // Maximum url length in IE is 2084, see:
         // http://support.microsoft.com/kb/208427
-        wchar_t href[2084];
-        wcsncpy_s(href, _countof(href), attrValue.bstrVal, _TRUNCATE);
-        if (!browserWindow_->IsUrlAllowed(href, _countof(href))) {
-            VARIANT eventReturn;
-            VariantInit(&eventReturn);
-            eventReturn.vt = VT_BOOL;
-            eventReturn.boolVal = VARIANT_FALSE;
-            htmlEvent->put_returnValue(eventReturn);
-            LOG_WARNING << "Shell open url:" << ConvertA(href);
-            ShellExecute(0, L"open", href, 0, 0, SW_SHOWNORMAL);
-        }
+        // wchar_t href[2084];
+        // wcsncpy_s(href, _countof(href), attrValue.bstrVal, _TRUNCATE);
+        // if (!browserWindow_->IsUrlAllowed(href, _countof(href))) {
+        //     VARIANT eventReturn;
+        //     VariantInit(&eventReturn);
+        //     eventReturn.vt = VT_BOOL;
+        //     eventReturn.boolVal = VARIANT_FALSE;
+        //     htmlEvent->put_returnValue(eventReturn);
+        //     LOG_WARNING << "Shell open url:" << ConvertA(href);
+        //     ShellExecute(0, L"open", href, 0, 0, SW_SHOWNORMAL);
+        // }
     }
     return S_OK;
 }
