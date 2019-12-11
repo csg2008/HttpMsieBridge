@@ -1,8 +1,8 @@
-#pragma once
+﻿#pragma once
 
 /*
 	Because of https://connect.microsoft.com/VisualStudio/feedback/details/888527/warnings-on-dbghelp-h
-	So when include DbgHelp.h (Even when using visual studio 2015 update 3 with windows 8.1 SDK) two 4091 warrning will be shown 
+	So when include DbgHelp.h (Even when using visual studio 2015 update 3 with windows 8.1 SDK) two 4091 warrning will be shown
 	duirng build process. So just disable showing them. The WindowsKillLibrary will be built without any problem.
 */
 #pragma warning( disable : 4091 )
@@ -16,6 +16,12 @@
 #include <iostream>
 #include <stdexcept>
 #include <system_error>
+#include <fstream>
+#include <iomanip>
+#include <memory>
+#include <thread>
+#include <list>
+#include <sstream>
 
 namespace Process {
 	/// <summary>
@@ -137,7 +143,7 @@ namespace Process {
 		// TODO: a rewrite needed.
 		void findAddressByStackBackTrace() {
 			LPVOID ctrlRoutine;
-			
+
 			USHORT count = CaptureStackBackTrace((ULONG)2, (ULONG)1, &ctrlRoutine, NULL);
 			if (count != 1) {
 				return;
@@ -207,7 +213,7 @@ namespace Process {
 			//std::cout << "TYPE: " << CtrlRoutine::current_routine->getType() << "\n";
 
 			CtrlRoutine::current_routine->findAddressByStackBackTrace();
-			
+
 			SetEvent(CtrlRoutine::current_routine->found_address_event);
 
 			/* TODO: Remove. No Exception Available here.
@@ -215,7 +221,7 @@ namespace Process {
 				throw std::runtime_error(std::string("Cannot set event for found address event handle. Code: ") + std::to_string(GetLastError()));
 			}
 			*/
-			
+
 			return TRUE;
 		}
 	public:
@@ -290,7 +296,7 @@ namespace Process {
 			*/
 			/*
 				NOTE: The reason for commenting the below snippet code and forcing the caller to call the findAddress
-				before call getAddress is performance and speed. Becasue current approach will get the ctrl routine address first and then 
+				before call getAddress is performance and speed. Becasue current approach will get the ctrl routine address first and then
 				the remote process open and start will happen. So if there is any prbolem (exception) in getting the ctrl routine address,
 				the remote process open will not fire. If we change the current approach, the findAddress method will not fire
 				until the remote process startRemoteThread method call. So the remote process open method will be called even we can't
@@ -311,7 +317,7 @@ namespace Process {
 		/// The needed access for open remote process.
 		/// </summary>
 		static const DWORD NEEDEDACCESS = PROCESS_QUERY_INFORMATION | PROCESS_VM_WRITE | PROCESS_VM_READ | PROCESS_VM_OPERATION | PROCESS_CREATE_THREAD;
-		
+
 		/// <summary>
 		/// The that we want to send.
 		/// </summary>
@@ -371,7 +377,7 @@ namespace Process {
 			}
 
 			AdjustTokenPrivileges(this->process_token, false, &tp, sizeof(TOKEN_PRIVILEGES), NULL, NULL);
-			
+
 			if (GetLastError() != 0L) {
 				return false;
 			}
@@ -643,7 +649,7 @@ namespace Process {
 		wsprintf(szFileName, L"%s-%04d%02d%02d-%02d%02d%02d.dmp",
 			szVersion, stLocalTime.wYear, stLocalTime.wMonth, stLocalTime.wDay,
 			stLocalTime.wHour, stLocalTime.wMinute, stLocalTime.wSecond);
-		HANDLE hDumpFile = CreateFile(szFileName, GENERIC_READ | GENERIC_WRITE, 
+		HANDLE hDumpFile = CreateFile(szFileName, GENERIC_READ | GENERIC_WRITE,
 			FILE_SHARE_WRITE | FILE_SHARE_READ, 0, CREATE_ALWAYS, 0, 0);
 		if (INVALID_HANDLE_VALUE == hDumpFile) {
 			FreeLibrary(hDbgHelp);
@@ -655,7 +661,7 @@ namespace Process {
 		expParam.ThreadId = GetCurrentThreadId();
 		expParam.ExceptionPointers = pExceptionPointers;
 		expParam.ClientPointers = FALSE;
-		pfnMiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), 
+		pfnMiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(),
 			hDumpFile, MiniDumpWithDataSegs, (pExceptionPointers ? &expParam : NULL), NULL, NULL);
 
 		// release file
@@ -672,6 +678,402 @@ namespace Process {
 		return GenerateMiniDump(lpExceptionInfo);
 	}
 
+
+	const bool send_manual_backtrace = false;
+	std::wstring minidump_filenamew = L"MiniDump.dmp";
+	std::string minidump_filename = "MiniDump.dmp";
+	std::string log_file_path = "./test.log";
+
+	bool report_unsuccessful = false;
+
+	std::time_t app_start_timestamp;
+
+	std::string get_uuid() noexcept;
+	std::string get_timestamp() noexcept;
+	std::string get_logs_json() noexcept;
+
+	double get_time_from_start() noexcept;
+
+	std::string prepare_crash_report(struct _EXCEPTION_POINTERS* ExceptionInfo, std::string minidump_result) noexcept;
+
+	void save_start_timestamp();
+	std::string get_command_line() noexcept;
+
+	void handle_exit() noexcept;
+	void handle_crash(struct _EXCEPTION_POINTERS* ExceptionInfo, bool callAbort = true) noexcept;
+
+	struct _EXCEPTION_POINTERS* generate_exception_info() noexcept;
+	void print_stacktrace_sym(CONTEXT* ctx, std::ostringstream & report_stream) noexcept; //Prints stack trace based on context record
+
+	std::string create_mini_dump(EXCEPTION_POINTERS* pep) noexcept;
+
+	std::string escapeJsonString(const std::string& input) noexcept;
+
+	std::string prepare_crash_report(struct _EXCEPTION_POINTERS* ExceptionInfo, std::string minidump_result) noexcept
+	{
+		std::ostringstream json_report;
+
+		json_report << "{";
+		json_report << "	\"event_id\": \"" << get_uuid() << "\", ";
+		json_report << "	\"timestamp\": \"" << get_timestamp() << "\", ";
+		if (send_manual_backtrace)
+		{
+			json_report << "	\"exception\": {\"values\":[{";
+			if (ExceptionInfo)
+			{
+				json_report << "		\"type\": \"" << ExceptionInfo->ExceptionRecord->ExceptionCode << "\", ";
+			}
+			//	json_report << "		\"value\": \"" << "ERROR_VALUE" << "\", ";
+			//	json_report << "		\"module\": \"" << "MODULE_NAME" << "\", ";
+			json_report << "		\"thread_id\": \"" << std::this_thread::get_id() << "\", ";
+
+			if (ExceptionInfo)
+			{
+				std::string method;
+				json_report << "		\"stacktrace\": { \"frames\" : [";
+				print_stacktrace_sym(ExceptionInfo->ContextRecord, json_report);
+				json_report << "		] } ";
+			}
+			json_report << "	}]}, ";
+		}
+		json_report << "	\"tags\": { ";
+		json_report << "		\"app_build_timestamp\": \"" << __DATE__ << " " << __TIME__ << "\", ";
+		json_report << "		\"release\": \"" << "0.0.23" << "\", ";
+		json_report << "		\"os_version\": \"" << "WIN32" << "\" ";
+		json_report << "	}, ";
+		json_report << "	\"extra\": { ";
+		json_report << "		\"app_run_time\": \"" << get_time_from_start() << "\", ";
+		json_report << "		\"app_logs_listing\": " << get_logs_json() << " , ";
+		json_report << "		\"minidump_result\": \"" << minidump_result << "\", ";
+		json_report << "		\"console_args\": \"" << get_command_line() << "\" ";
+		json_report << "	} ";
+		json_report << "}";
+
+		return json_report.str();
+	}
+
+	std::string create_mini_dump(EXCEPTION_POINTERS* pep) noexcept
+	{
+		std::string ret = "successfully";
+
+		HANDLE hFile = CreateFile(minidump_filenamew.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+		if ((hFile != NULL) && (hFile != INVALID_HANDLE_VALUE))
+		{
+			MINIDUMP_EXCEPTION_INFORMATION mdei = {0};
+
+			mdei.ThreadId = GetCurrentThreadId();
+			mdei.ExceptionPointers = pep;
+			mdei.ClientPointers = TRUE;
+
+			const DWORD CD_Flags = MiniDumpWithDataSegs | MiniDumpWithHandleData | MiniDumpScanMemory | MiniDumpWithUnloadedModules | MiniDumpWithIndirectlyReferencedMemory | MiniDumpWithPrivateReadWriteMemory | MiniDumpWithFullMemoryInfo | MiniDumpWithThreadInfo | MiniDumpIgnoreInaccessibleMemory;
+
+			BOOL rv = MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile, (MINIDUMP_TYPE)CD_Flags, (pep != 0) ? &mdei : 0, 0, 0);
+			if(!rv)
+			{
+				ret = "failed to generate minidump: " + std::to_string(GetLastError());
+			}
+
+			CloseHandle(hFile);
+		} else {
+			ret = "failed to create file: " + std::to_string(GetLastError());
+		}
+		return ret;
+	}
+
+	void handle_crash(struct _EXCEPTION_POINTERS* ExceptionInfo, bool callAbort) noexcept
+	{
+		static bool insideCrashMethod = false;
+		if (insideCrashMethod)
+		{
+			abort();
+		}
+		insideCrashMethod = true;
+
+		std::string minidump_result = create_mini_dump(ExceptionInfo);
+
+		std::string report = prepare_crash_report(ExceptionInfo, minidump_result);
+
+		//send_crash_to_sentry_sync(report);
+
+		DeleteFile(minidump_filenamew.c_str());
+
+		if (callAbort)
+		{
+			abort();
+		}
+
+		insideCrashMethod = false;
+	}
+
+	void handle_exit() noexcept
+	{
+		if (report_unsuccessful)
+		{
+			handle_crash(generate_exception_info(), false);
+		}
+	}
+
+	struct _EXCEPTION_POINTERS* generate_exception_info() noexcept
+	{
+		//todo
+		return nullptr;
+	}
+
+	void print_stacktrace_sym(CONTEXT* ctx, std::ostringstream & report_stream) noexcept
+	{
+		BOOL    result;
+		HANDLE  process;
+		HANDLE  thread;
+		HMODULE hModule;
+
+		STACKFRAME64 stack;
+		ULONG        frame;
+		DWORD64      displacement;
+
+		DWORD			disp;
+		IMAGEHLP_LINE64 *line;
+		const int		MaxNameLen = 256;
+
+		char buffer[sizeof(SYMBOL_INFO) + MAX_SYM_NAME * sizeof(TCHAR)];
+		char module[MaxNameLen];
+		PSYMBOL_INFO pSymbol = (PSYMBOL_INFO)buffer;
+
+		memset(&stack, 0, sizeof(STACKFRAME64));
+
+		process = GetCurrentProcess();
+		thread = GetCurrentThread();
+		displacement = 0;
+	#if !defined(_M_AMD64)
+		stack.AddrPC.Offset = (*ctx).Eip;
+		stack.AddrPC.Mode = AddrModeFlat;
+		stack.AddrStack.Offset = (*ctx).Esp;
+		stack.AddrStack.Mode = AddrModeFlat;
+		stack.AddrFrame.Offset = (*ctx).Ebp;
+		stack.AddrFrame.Mode = AddrModeFlat;
+	#endif
+
+		SymInitialize(process, NULL, TRUE);
+		bool first_element = true;
+		for (frame = 0; ; frame++)
+		{
+			//get next call from stack
+			result = StackWalk64
+			(
+	#if defined(_M_AMD64)
+				IMAGE_FILE_MACHINE_AMD64
+	#else
+				IMAGE_FILE_MACHINE_I386
+	#endif
+				, process, thread, &stack, ctx, NULL, SymFunctionTableAccess64, SymGetModuleBase64, NULL);
+
+			if (!result) break;
+
+			if (!first_element)
+			{
+				report_stream << ",";
+			}
+			report_stream << " { ";
+
+			//get symbol name for address
+			pSymbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+			pSymbol->MaxNameLen = MAX_SYM_NAME;
+			if (SymFromAddr(process, (ULONG64)stack.AddrPC.Offset, &displacement, pSymbol))
+			{
+				line = (IMAGEHLP_LINE64 *)malloc(sizeof(IMAGEHLP_LINE64));
+				line->SizeOfStruct = sizeof(IMAGEHLP_LINE64);
+
+
+
+				report_stream << " 	\"function\": \"" << pSymbol->Name << "\", ";
+				report_stream << " 	\"instruction_addr\": \"" << "0x" << std::uppercase << std::setfill('0') << std::setw(12) << std::hex << pSymbol->Address << "\", ";
+				if (SymGetLineFromAddr64(process, stack.AddrPC.Offset, &disp, line))
+				{
+					report_stream << " 	\"lineno\": \"" << line->LineNumber << "\", ";
+					std::string file_name = line->FileName;
+					file_name = escapeJsonString(file_name);
+					report_stream << " 	\"filename\": \"" << file_name << "\", ";
+				}
+				else
+				{
+					//failed to get line number
+				}
+				free(line);
+				line = NULL;
+			}
+			else
+			{
+				report_stream << " 	\"function\": \"" << "unknown" << "\", ";
+				report_stream << " 	\"instruction_addr\": \"" << "0x" << std::uppercase << std::setfill('0') << std::setw(12) << std::hex << (ULONG64)stack.AddrPC.Offset << "\", ";
+			}
+
+			hModule = NULL;
+			lstrcpyA(module, "");
+			if (GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCTSTR)(stack.AddrPC.Offset), &hModule))
+			{
+				if (hModule != NULL)
+				{
+					if (GetModuleFileNameA(hModule, module, MaxNameLen))
+					{
+						std::string module_name = module;
+						module_name = escapeJsonString(module_name);
+						report_stream << " 	\"module\": \"" << module_name << "\" ";
+					}
+				}
+			}
+
+			first_element = false;
+			report_stream << " } ";
+		}
+	}
+
+	void save_start_timestamp()
+	{
+		std::time(&app_start_timestamp);
+	}
+
+	double get_time_from_start() noexcept
+	{
+		time_t current_time;
+		time(&current_time);
+		return difftime(current_time, app_start_timestamp);
+	}
+
+	std::string get_command_line() noexcept
+	{
+		std::string ret = "empty";
+		LPWSTR lpCommandLine = GetCommandLine();
+		if (lpCommandLine != nullptr)
+		{
+			std::wstring ws_args = std::wstring(lpCommandLine);
+			ret = std::string(ws_args.begin(), ws_args.end());
+			ret = escapeJsonString(ret);
+		}
+		return ret;
+	}
+
+	// 新的入口点，需要与当前正在用的整合
+	void setup_crash_reporting()
+	{
+		save_start_timestamp();
+
+		std::set_terminate([]() { handle_crash(nullptr); });
+
+		SetUnhandledExceptionFilter([](struct _EXCEPTION_POINTERS* ExceptionInfo)
+		{
+			/* don't use if a debugger is present */
+			if (IsDebuggerPresent())
+			{
+				return LONG(EXCEPTION_CONTINUE_SEARCH);
+			}
+
+			handle_crash(ExceptionInfo);
+
+			// Unreachable statement
+			return LONG(EXCEPTION_CONTINUE_SEARCH);
+		});
+
+		// The atexit will check if updater was safelly closed
+		std::atexit(handle_exit);
+		std::at_quick_exit(handle_exit);
+
+	}
+
+	std::string get_logs_json() noexcept
+	{
+		std::list<std::string> last_logs;
+		try {
+			std::ifstream logfile(log_file_path);
+
+			std::string logline;
+			while (std::getline(logfile, logline))
+			{
+				last_logs.push_back(std::string("\"") + escapeJsonString(logline) + std::string("\""));
+				if(last_logs.size() > 100)
+				{
+					last_logs.pop_front();
+				}
+			}
+
+		} catch (...)
+		{
+			return std::string(" \"failed to read logs\" ");
+		}
+
+		std::ostringstream ss;
+		bool first_line = true;
+
+		ss << " [ ";
+		for (auto const& logline : last_logs)
+		{
+			if (first_line)
+			{
+				first_line = false;
+			}
+			else
+			{
+				ss << ", \n";
+			}
+
+			ss << logline;
+		}
+		ss << " ] \n";
+
+		return ss.str();
+	}
+
+	std::string get_timestamp() noexcept
+	{
+		char buf[sizeof "xxxx-xx-xxTxx:xx:xxx\0"];
+		std::time_t curent_time;
+
+		std::time(&curent_time);
+		std::strftime(buf, sizeof buf, "%Y-%m-%dT%H:%M:%SZ", std::gmtime(&curent_time));
+
+		return std::string(buf);
+	}
+
+	std::string get_uuid() noexcept
+	{
+		char result[33] = { '\0' }; //"fc6d8c0c43fc4630ad850ee518f1b9d0";
+		std::srand(static_cast<unsigned int>(std::time(nullptr)));
+
+		for (std::size_t i = 0; i < sizeof(result) - 1; ++i)
+		{
+			const auto r = static_cast<char>(std::rand() % 16);
+			if (r < 10)
+			{
+				result[i] = '0' + r;
+			}
+			else
+			{
+				result[i] = 'a' + r - static_cast<char>(10);
+			}
+		}
+
+		return std::string(result);
+	}
+
+	std::string escapeJsonString(const std::string& input) noexcept
+	{
+		std::ostringstream ss;
+		for (auto iter = input.cbegin(); iter != input.cend(); iter++)
+		{
+			switch (*iter)
+			{
+			case '\\': ss << "\\\\"; break;
+			case '"': ss << "\\\""; break;
+			case '/': ss << "\\/"; break;
+			case '\b': ss << "\\b"; break;
+			case '\f': ss << "\\f"; break;
+			case '\n': ss << "\\n"; break;
+			case '\r': ss << "\\r"; break;
+			case '\t': ss << "\\t"; break;
+			default: ss << *iter; break;
+			}
+		}
+		return ss.str();
+	}
 	int test(int argc,char *argv[]) {
 		DWORD signal_type;
 		DWORD signal_pid;

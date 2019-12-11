@@ -159,6 +159,18 @@ inline std::string NowTime() {
 	return ss.str();
 }
 
+static void LogLastError(LPCWSTR lpFunctionName) {
+	DWORD  dwError = GetLastError();
+	DWORD  szMsgBuf = 1024;
+	LPTSTR strMsgBuf = new wchar_t[szMsgBuf];
+
+	FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, dwError, 0, strMsgBuf, szMsgBuf, NULL);
+
+	LOG_ERROR << lpFunctionName << ":" << szMsgBuf << strMsgBuf;
+
+	delete[] strMsgBuf;
+}
+
 static void InitializeLogging(bool show_console, std::string log_level, std::string log_file) {
     if (show_console) {
         AllocConsole();

@@ -8,6 +8,8 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include <codecvt>
+#include <filesystem>
 #include <shlobj.h>
 #include <shellapi.h>
 #include <windows.h>
@@ -17,6 +19,74 @@
 #include "string_utils.h"
 
 #pragma comment( lib, "shell32.lib")
+
+BOOL StartApplication(LPWSTR lpCommandLine, LPCWSTR lpWorkingDirectory)
+{
+	BOOL bSuccess;
+	DWORD dwShellProcId;
+	HANDLE hShellProc;
+	HANDLE hShellToken;
+	HANDLE hNewToken;
+	STARTUPINFO xStartupInfo = { 0 };
+	PROCESS_INFORMATION xProcInfo = { 0 };
+	HWND hwndShell = GetShellWindow();
+
+	if (hwndShell == NULL)
+		return FALSE;
+
+	GetWindowThreadProcessId(hwndShell, &dwShellProcId);
+
+	hShellProc = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, dwShellProcId);
+
+	if (hShellProc == NULL)
+	{
+		LogLastError(L"OpenProcess");
+		return FALSE;
+	}
+
+	bSuccess = OpenProcessToken(hShellProc, TOKEN_DUPLICATE, &hShellToken);
+
+	if (bSuccess == 0)
+	{
+		LogLastError(L"OpenProcessToken");
+		return FALSE;
+	}
+
+	bSuccess = DuplicateTokenEx(
+		hShellToken,
+		TOKEN_QUERY | TOKEN_ASSIGN_PRIMARY |
+		TOKEN_DUPLICATE | TOKEN_ADJUST_DEFAULT |
+		TOKEN_ADJUST_SESSIONID,
+		NULL,
+		SecurityImpersonation,
+		TokenPrimary,
+		&hNewToken
+	);
+
+	if (bSuccess == 0)
+	{
+		LogLastError(L"DuplicateTokenEx");
+		return FALSE;
+	}
+
+	bSuccess = CreateProcessWithTokenW(
+		hNewToken,
+		0, NULL,
+		lpCommandLine,
+		0, NULL,
+		lpWorkingDirectory,
+		&xStartupInfo,
+		&xProcInfo
+	);
+
+	if (bSuccess == 0)
+	{
+		LogLastError(L"CreateProcessWithTokenW");
+		return FALSE;
+	}
+
+	return TRUE;
+}
 
 SHELLEXECUTEINFO exec(std::string exeFile, int num, bool show, bool wait, bool asAdmin) {
     int pid = 0;
@@ -237,6 +307,52 @@ std::string GetAnsiTempDirectory() {
         }
     }
     return WideToUtf8(tempPath);
+}
+
+namespace fs = std::filesystem;
+
+static fs::path fetch_path(const char *str, size_t length)
+{
+	/* Use the utf8_facet here for anything provided from argtable */
+	fs::path path = fs::u8path(str, str + length);
+
+	//log_debug("Given to fetch path: %.*s", length, str);
+
+	fs::path result(fs::absolute(path).make_preferred());
+
+	/* We use the utf8_facet here one more time to print-out UTF-8.
+	 * Otherwise, it will print-out the system native which on Windows
+	 * is wchar_t (encoded in UTF-16LE) */
+	//log_debug("Result of fetch path: %s", result.u8string().c_str());
+
+	return result;
+}
+
+static fs::path fetch_default_temp_dir()
+{
+	std::error_code ec{};
+	fs::path temp_dir = fs::temp_directory_path(ec);
+	if(!ec)
+	{
+		temp_dir /= "slobs-updater";
+		
+		time_t t = time(nullptr);
+		struct tm *lt = localtime(&t);
+		
+		std::srand(static_cast<unsigned int>(time(nullptr)));
+
+		char buf[24];
+		sprintf(buf, "%04i%03i%02i%02i%02i%c%c\0", lt->tm_year+1900, lt->tm_yday, lt->tm_hour, lt->tm_min, lt->tm_sec, 'a' + rand() % 20, 'a' + rand() % 20);
+
+		temp_dir /= buf;
+
+		fs::create_directories(temp_dir);
+	} else {
+		//log_info("Failed to get temporary directory from system: %d %s", ec.value(), ec.message().c_str());
+
+		temp_dir = "";
+	}
+	return temp_dir;
 }
 
 //inline bool ReadFileContent(const char* pFilePath, const char* pReadMode, OUT std::string& strContent) {
