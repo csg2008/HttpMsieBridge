@@ -8,6 +8,7 @@
 
 #include "mmsystem.h"
 #include "resource.h"
+#include "3rd/ProcessManage.h"
 #include "misc/logger.h"
 #include "misc/file_utils.h"
 #include "misc/debug.h"
@@ -324,7 +325,7 @@ bool initMBEntry() {
 }
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrCmdLine, int nCmdShow) {
-    SetUnhandledExceptionFilter(ExceptionFilter);
+    SetUnhandledExceptionFilter(Process::ExceptionFilter);
 
     g_hInstance = hInstance;
     nlohmann::json* settings = GetApplicationSettings();

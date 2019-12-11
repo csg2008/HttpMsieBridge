@@ -75,8 +75,6 @@ char* WCHAR_TO_CHAR(wchar_t* wide);
         MessageBoxA(NULL, tmpstr, "DEBUG", MB_ICONINFORMATION);\
     }
 
-int GenerateMiniDump(PEXCEPTION_POINTERS pExceptionPointers);
-LONG WINAPI ExceptionFilter(LPEXCEPTION_POINTERS lpExceptionInfo);
 void GUID_TO_CHAR(const GUID* guid, char* outString, size_t outStringSize);
 
 void FatalError(HWND hwnd, std::string message);
