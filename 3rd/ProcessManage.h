@@ -694,18 +694,13 @@ namespace Process {
 
 	double get_time_from_start() noexcept;
 
-	std::string prepare_crash_report(struct _EXCEPTION_POINTERS* ExceptionInfo, std::string minidump_result) noexcept;
-
 	void save_start_timestamp();
 	std::string get_command_line() noexcept;
 
 	void handle_exit() noexcept;
 	void handle_crash(struct _EXCEPTION_POINTERS* ExceptionInfo, bool callAbort = true) noexcept;
 
-	struct _EXCEPTION_POINTERS* generate_exception_info() noexcept;
 	void print_stacktrace_sym(CONTEXT* ctx, std::ostringstream & report_stream) noexcept; //Prints stack trace based on context record
-
-	std::string create_mini_dump(EXCEPTION_POINTERS* pep) noexcept;
 
 	std::string escapeJsonString(const std::string& input) noexcept;
 
@@ -748,21 +743,22 @@ namespace Process {
 		return json_report.str();
 	}
 
-	std::string create_mini_dump(EXCEPTION_POINTERS* pep) noexcept {
+	std::string create_mini_dump(EXCEPTION_POINTERS* pep, std::wstring filename) noexcept {
 		std::string ret = "successfully";
 
-		HANDLE hFile = CreateFile(minidump_filenamew.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+		HANDLE hFile = CreateFile(filename.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_WRITE | FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
 		if ((hFile != NULL) && (hFile != INVALID_HANDLE_VALUE)) {
-			MINIDUMP_EXCEPTION_INFORMATION mdei = {0};
+			MINIDUMP_EXCEPTION_INFORMATION expParam = {0};
 
-			mdei.ThreadId = GetCurrentThreadId();
-			mdei.ExceptionPointers = pep;
-			mdei.ClientPointers = TRUE;
+			expParam.ThreadId = GetCurrentThreadId();
+			expParam.ExceptionPointers = pep;
+			expParam.ClientPointers = TRUE;
+			//expParam.ClientPointers = FALSE;
 
 			const DWORD CD_Flags = MiniDumpWithDataSegs | MiniDumpWithHandleData | MiniDumpScanMemory | MiniDumpWithUnloadedModules | MiniDumpWithIndirectlyReferencedMemory | MiniDumpWithPrivateReadWriteMemory | MiniDumpWithFullMemoryInfo | MiniDumpWithThreadInfo | MiniDumpIgnoreInaccessibleMemory;
 
-			BOOL rv = MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile, (MINIDUMP_TYPE)CD_Flags, (pep != 0) ? &mdei : 0, 0, 0);
+			BOOL rv = MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile, (MINIDUMP_TYPE)CD_Flags, (pep != 0) ? &expParam : 0, 0, 0);
 			if(!rv) {
 				ret = "failed to generate minidump: " + std::to_string(GetLastError());
 			}
@@ -781,7 +777,7 @@ namespace Process {
 		}
 		insideCrashMethod = true;
 
-		std::string minidump_result = create_mini_dump(ExceptionInfo);
+		std::string minidump_result = create_mini_dump(ExceptionInfo, minidump_filenamew);
 
 		std::string report = prepare_crash_report(ExceptionInfo, minidump_result);
 
@@ -798,13 +794,8 @@ namespace Process {
 
 	void handle_exit() noexcept {
 		if (report_unsuccessful) {
-			handle_crash(generate_exception_info(), false);
+			handle_crash(nullptr, false);
 		}
-	}
-
-	struct _EXCEPTION_POINTERS* generate_exception_info() noexcept {
-		//todo
-		return nullptr;
 	}
 
 	void print_stacktrace_sym(CONTEXT* ctx, std::ostringstream & report_stream) noexcept {
