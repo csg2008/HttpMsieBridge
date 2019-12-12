@@ -325,7 +325,7 @@ bool initMBEntry() {
 }
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrCmdLine, int nCmdShow) {
-    SetUnhandledExceptionFilter(Process::ExceptionFilter);
+    Process::setup_crash_reporting();
 
     g_hInstance = hInstance;
     nlohmann::json* settings = GetApplicationSettings();
