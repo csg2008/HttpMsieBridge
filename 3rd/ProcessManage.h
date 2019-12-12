@@ -709,26 +709,22 @@ namespace Process {
 
 	std::string escapeJsonString(const std::string& input) noexcept;
 
-	std::string prepare_crash_report(struct _EXCEPTION_POINTERS* ExceptionInfo, std::string minidump_result) noexcept
-	{
+	std::string prepare_crash_report(struct _EXCEPTION_POINTERS* ExceptionInfo, std::string minidump_result) noexcept {
 		std::ostringstream json_report;
 
 		json_report << "{";
 		json_report << "	\"event_id\": \"" << get_uuid() << "\", ";
 		json_report << "	\"timestamp\": \"" << get_timestamp() << "\", ";
-		if (send_manual_backtrace)
-		{
+		if (send_manual_backtrace) {
 			json_report << "	\"exception\": {\"values\":[{";
-			if (ExceptionInfo)
-			{
+			if (ExceptionInfo) {
 				json_report << "		\"type\": \"" << ExceptionInfo->ExceptionRecord->ExceptionCode << "\", ";
 			}
 			//	json_report << "		\"value\": \"" << "ERROR_VALUE" << "\", ";
 			//	json_report << "		\"module\": \"" << "MODULE_NAME" << "\", ";
 			json_report << "		\"thread_id\": \"" << std::this_thread::get_id() << "\", ";
 
-			if (ExceptionInfo)
-			{
+			if (ExceptionInfo) {
 				std::string method;
 				json_report << "		\"stacktrace\": { \"frames\" : [";
 				print_stacktrace_sym(ExceptionInfo->ContextRecord, json_report);
@@ -752,14 +748,12 @@ namespace Process {
 		return json_report.str();
 	}
 
-	std::string create_mini_dump(EXCEPTION_POINTERS* pep) noexcept
-	{
+	std::string create_mini_dump(EXCEPTION_POINTERS* pep) noexcept {
 		std::string ret = "successfully";
 
 		HANDLE hFile = CreateFile(minidump_filenamew.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
-		if ((hFile != NULL) && (hFile != INVALID_HANDLE_VALUE))
-		{
+		if ((hFile != NULL) && (hFile != INVALID_HANDLE_VALUE)) {
 			MINIDUMP_EXCEPTION_INFORMATION mdei = {0};
 
 			mdei.ThreadId = GetCurrentThreadId();
@@ -769,8 +763,7 @@ namespace Process {
 			const DWORD CD_Flags = MiniDumpWithDataSegs | MiniDumpWithHandleData | MiniDumpScanMemory | MiniDumpWithUnloadedModules | MiniDumpWithIndirectlyReferencedMemory | MiniDumpWithPrivateReadWriteMemory | MiniDumpWithFullMemoryInfo | MiniDumpWithThreadInfo | MiniDumpIgnoreInaccessibleMemory;
 
 			BOOL rv = MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile, (MINIDUMP_TYPE)CD_Flags, (pep != 0) ? &mdei : 0, 0, 0);
-			if(!rv)
-			{
+			if(!rv) {
 				ret = "failed to generate minidump: " + std::to_string(GetLastError());
 			}
 
@@ -781,11 +774,9 @@ namespace Process {
 		return ret;
 	}
 
-	void handle_crash(struct _EXCEPTION_POINTERS* ExceptionInfo, bool callAbort) noexcept
-	{
+	void handle_crash(struct _EXCEPTION_POINTERS* ExceptionInfo, bool callAbort) noexcept {
 		static bool insideCrashMethod = false;
-		if (insideCrashMethod)
-		{
+		if (insideCrashMethod) {
 			abort();
 		}
 		insideCrashMethod = true;
@@ -798,30 +789,25 @@ namespace Process {
 
 		DeleteFile(minidump_filenamew.c_str());
 
-		if (callAbort)
-		{
+		if (callAbort) {
 			abort();
 		}
 
 		insideCrashMethod = false;
 	}
 
-	void handle_exit() noexcept
-	{
-		if (report_unsuccessful)
-		{
+	void handle_exit() noexcept {
+		if (report_unsuccessful) {
 			handle_crash(generate_exception_info(), false);
 		}
 	}
 
-	struct _EXCEPTION_POINTERS* generate_exception_info() noexcept
-	{
+	struct _EXCEPTION_POINTERS* generate_exception_info() noexcept {
 		//todo
 		return nullptr;
 	}
 
-	void print_stacktrace_sym(CONTEXT* ctx, std::ostringstream & report_stream) noexcept
-	{
+	void print_stacktrace_sym(CONTEXT* ctx, std::ostringstream & report_stream) noexcept {
 		BOOL    result;
 		HANDLE  process;
 		HANDLE  thread;
@@ -855,8 +841,7 @@ namespace Process {
 
 		SymInitialize(process, NULL, TRUE);
 		bool first_element = true;
-		for (frame = 0; ; frame++)
-		{
+		for (frame = 0; ; frame++) {
 			//get next call from stack
 			result = StackWalk64
 			(
@@ -869,8 +854,7 @@ namespace Process {
 
 			if (!result) break;
 
-			if (!first_element)
-			{
+			if (!first_element) {
 				report_stream << ",";
 			}
 			report_stream << " { ";
@@ -878,8 +862,7 @@ namespace Process {
 			//get symbol name for address
 			pSymbol->SizeOfStruct = sizeof(SYMBOL_INFO);
 			pSymbol->MaxNameLen = MAX_SYM_NAME;
-			if (SymFromAddr(process, (ULONG64)stack.AddrPC.Offset, &displacement, pSymbol))
-			{
+			if (SymFromAddr(process, (ULONG64)stack.AddrPC.Offset, &displacement, pSymbol)) {
 				line = (IMAGEHLP_LINE64 *)malloc(sizeof(IMAGEHLP_LINE64));
 				line->SizeOfStruct = sizeof(IMAGEHLP_LINE64);
 
@@ -887,34 +870,26 @@ namespace Process {
 
 				report_stream << " 	\"function\": \"" << pSymbol->Name << "\", ";
 				report_stream << " 	\"instruction_addr\": \"" << "0x" << std::uppercase << std::setfill('0') << std::setw(12) << std::hex << pSymbol->Address << "\", ";
-				if (SymGetLineFromAddr64(process, stack.AddrPC.Offset, &disp, line))
-				{
+				if (SymGetLineFromAddr64(process, stack.AddrPC.Offset, &disp, line)) {
 					report_stream << " 	\"lineno\": \"" << line->LineNumber << "\", ";
 					std::string file_name = line->FileName;
 					file_name = escapeJsonString(file_name);
 					report_stream << " 	\"filename\": \"" << file_name << "\", ";
-				}
-				else
-				{
+				} else {
 					//failed to get line number
 				}
 				free(line);
 				line = NULL;
-			}
-			else
-			{
+			} else {
 				report_stream << " 	\"function\": \"" << "unknown" << "\", ";
 				report_stream << " 	\"instruction_addr\": \"" << "0x" << std::uppercase << std::setfill('0') << std::setw(12) << std::hex << (ULONG64)stack.AddrPC.Offset << "\", ";
 			}
 
 			hModule = NULL;
 			lstrcpyA(module, "");
-			if (GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCTSTR)(stack.AddrPC.Offset), &hModule))
-			{
-				if (hModule != NULL)
-				{
-					if (GetModuleFileNameA(hModule, module, MaxNameLen))
-					{
+			if (GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCTSTR)(stack.AddrPC.Offset), &hModule)) {
+				if (hModule != NULL) {
+					if (GetModuleFileNameA(hModule, module, MaxNameLen)) {
 						std::string module_name = module;
 						module_name = escapeJsonString(module_name);
 						report_stream << " 	\"module\": \"" << module_name << "\" ";
@@ -927,43 +902,37 @@ namespace Process {
 		}
 	}
 
-	void save_start_timestamp()
-	{
+	void save_start_timestamp() {
 		std::time(&app_start_timestamp);
 	}
 
-	double get_time_from_start() noexcept
-	{
+	double get_time_from_start() noexcept {
 		time_t current_time;
 		time(&current_time);
 		return difftime(current_time, app_start_timestamp);
 	}
 
-	std::string get_command_line() noexcept
-	{
+	std::string get_command_line() noexcept {
 		std::string ret = "empty";
 		LPWSTR lpCommandLine = GetCommandLine();
-		if (lpCommandLine != nullptr)
-		{
+		if (lpCommandLine != nullptr) {
 			std::wstring ws_args = std::wstring(lpCommandLine);
 			ret = std::string(ws_args.begin(), ws_args.end());
 			ret = escapeJsonString(ret);
 		}
+
 		return ret;
 	}
 
 	// 新的入口点，需要与当前正在用的整合
-	void setup_crash_reporting()
-	{
+	void setup_crash_reporting() {
 		save_start_timestamp();
 
 		std::set_terminate([]() { handle_crash(nullptr); });
 
-		SetUnhandledExceptionFilter([](struct _EXCEPTION_POINTERS* ExceptionInfo)
-		{
+		SetUnhandledExceptionFilter([](struct _EXCEPTION_POINTERS* ExceptionInfo) {
 			/* don't use if a debugger is present */
-			if (IsDebuggerPresent())
-			{
+			if (IsDebuggerPresent()) {
 				return LONG(EXCEPTION_CONTINUE_SEARCH);
 			}
 
@@ -976,27 +945,22 @@ namespace Process {
 		// The atexit will check if updater was safelly closed
 		std::atexit(handle_exit);
 		std::at_quick_exit(handle_exit);
-
 	}
 
-	std::string get_logs_json() noexcept
-	{
+	std::string get_logs_json() noexcept {
 		std::list<std::string> last_logs;
 		try {
 			std::ifstream logfile(log_file_path);
 
 			std::string logline;
-			while (std::getline(logfile, logline))
-			{
+			while (std::getline(logfile, logline)) {
 				last_logs.push_back(std::string("\"") + escapeJsonString(logline) + std::string("\""));
-				if(last_logs.size() > 100)
-				{
+				if(last_logs.size() > 100) {
 					last_logs.pop_front();
 				}
 			}
 
-		} catch (...)
-		{
+		} catch (...) {
 			return std::string(" \"failed to read logs\" ");
 		}
 
@@ -1004,14 +968,10 @@ namespace Process {
 		bool first_line = true;
 
 		ss << " [ ";
-		for (auto const& logline : last_logs)
-		{
-			if (first_line)
-			{
+		for (auto const& logline : last_logs) {
+			if (first_line) {
 				first_line = false;
-			}
-			else
-			{
+			} else {
 				ss << ", \n";
 			}
 
@@ -1022,8 +982,7 @@ namespace Process {
 		return ss.str();
 	}
 
-	std::string get_timestamp() noexcept
-	{
+	std::string get_timestamp() noexcept {
 		char buf[sizeof "xxxx-xx-xxTxx:xx:xxx\0"];
 		std::time_t curent_time;
 
@@ -1033,20 +992,15 @@ namespace Process {
 		return std::string(buf);
 	}
 
-	std::string get_uuid() noexcept
-	{
+	std::string get_uuid() noexcept {
 		char result[33] = { '\0' }; //"fc6d8c0c43fc4630ad850ee518f1b9d0";
 		std::srand(static_cast<unsigned int>(std::time(nullptr)));
 
-		for (std::size_t i = 0; i < sizeof(result) - 1; ++i)
-		{
+		for (std::size_t i = 0; i < sizeof(result) - 1; ++i) {
 			const auto r = static_cast<char>(std::rand() % 16);
-			if (r < 10)
-			{
+			if (r < 10) {
 				result[i] = '0' + r;
-			}
-			else
-			{
+			} else {
 				result[i] = 'a' + r - static_cast<char>(10);
 			}
 		}
@@ -1054,13 +1008,10 @@ namespace Process {
 		return std::string(result);
 	}
 
-	std::string escapeJsonString(const std::string& input) noexcept
-	{
+	std::string escapeJsonString(const std::string& input) noexcept {
 		std::ostringstream ss;
-		for (auto iter = input.cbegin(); iter != input.cend(); iter++)
-		{
-			switch (*iter)
-			{
+		for (auto iter = input.cbegin(); iter != input.cend(); iter++) {
+			switch (*iter) {
 			case '\\': ss << "\\\\"; break;
 			case '"': ss << "\\\""; break;
 			case '/': ss << "\\/"; break;
@@ -1072,8 +1023,10 @@ namespace Process {
 			default: ss << *iter; break;
 			}
 		}
+
 		return ss.str();
 	}
+
 	int test(int argc,char *argv[]) {
 		DWORD signal_type;
 		DWORD signal_pid;
@@ -1082,31 +1035,25 @@ namespace Process {
 		if (argc == 1) {
 			std::cout << "Not enough argument. Use -h for help." << std::endl;
 			return 0;
-		}
-		else if (argc == 2) {
+		} else if (argc == 2) {
 			if (strcmp(argv[1], "-h") == 0) {
 				std::cout << "You should give the signal type and the pid to send the signal.\n"
 					<< "Example: windows-kill -SIGINT 1234\n"
 					<< "-l\t List of available signals type." << std::endl;
-			}
-			else if (strcmp(argv[1], "-l") == 0) {
+			} else if (strcmp(argv[1], "-l") == 0) {
 				std::cout << "Availabe Signal Types\n"
 					<< "\t(1) (SIGBREAK) : CTR + Break\n"
 					<< "\t(2) (SIGINT) : CTR + C\n" << std::endl;
-			}
-			else {
+			} else {
 				std::cout << "Not enough argument. Use -h for help." << std::endl;
 			}
 			return 0;
-		}
-		else if (argc == 3) {
+		} else if (argc == 3) {
 			if (strcmp(argv[1], "-1") == 0 || strcmp(argv[1], "-SIGBREAK") == 0) {
 				signal_type = Process::SIGNAL_TYPE_CTRL_BREAK;
-			}
-			else if (strcmp(argv[1], "-2") == 0 || strcmp(argv[1], "-SIGINT") == 0) {
+			} else if (strcmp(argv[1], "-2") == 0 || strcmp(argv[1], "-SIGINT") == 0) {
 				signal_type = Process::SIGNAL_TYPE_CTRL_C;
-			}
-			else {
+			} else {
 				std::cout << "Signal type " << argv[1] << " not supported. Use -h for help." << std::endl;
 				return 0;
 			}
@@ -1122,30 +1069,23 @@ namespace Process {
 		try {
 			Process::sendSignal(signal_pid, signal_type);
 			std::cout << "Signal sent successfuly. type: " << signal_type << " | pid: " << signal_pid << "\n";
-		}
-		catch (const std::invalid_argument& exception) {
+		} catch (const std::invalid_argument& exception) {
 			if (strcmp(exception.what(), "ESRCH") == 0) {
 				std::cout << "Error: Pid dosen't exist." << std::endl;
-			}
-			else if(strcmp(exception.what(), "EINVAL") == 0){
+			} else if(strcmp(exception.what(), "EINVAL") == 0){
 				std::cout << "Error: Invalid signal type." << std::endl;
-			}
-			else {
+			} else {
 				std::cout << "InvalidArgument: windows-kill-library: " << exception.what() << std::endl;
 			}
-		}
-		catch (const std::system_error& exception) {
+		} catch (const std::system_error& exception) {
 			std::cout << "SystemError " << exception.code() << ": " << exception.what() << std::endl;
-		}
-		catch (const std::runtime_error& exception) {
+		} catch (const std::runtime_error& exception) {
 			if (strcmp(exception.what(), "EPERM") == 0) {
 				std::cout << "Not enough permission to send the signal." << std::endl;
-			}
-			else {
+			} else {
 				std::cout << "RuntimeError: windows-kill-library: " << exception.what() << std::endl;
 			}
-		}
-		catch (const std::exception& exception) {
+		} catch (const std::exception& exception) {
 			std::cout << "Error: windows-kill-library: " << exception.what() << std::endl;
 		}
 
