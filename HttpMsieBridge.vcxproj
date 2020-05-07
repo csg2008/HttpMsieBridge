@@ -87,8 +87,6 @@
       <GenerateStublessProxies>true</GenerateStublessProxies>
       <TypeLibraryName>$(IntDir)HttpMsieBridge.tlb</TypeLibraryName>
       <HeaderFileName>HttpMsieBridge.h</HeaderFileName>
-      <DllDataFileName>
-      </DllDataFileName>
       <InterfaceIdentifierFileName>HttpMsieBridge_i.c</InterfaceIdentifierFileName>
       <ProxyFileName>HttpMsieBridge_p.c</ProxyFileName>
     </Midl>
@@ -96,16 +94,14 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NOMINMAX;_WINDOWS;_CRT_SECURE_NO_WARNINGS;STRICT;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
       <ExceptionHandling>Sync</ExceptionHandling>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalOptions>/DDEBUG %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -126,8 +122,6 @@
       <GenerateStublessProxies>true</GenerateStublessProxies>
       <TypeLibraryName>$(IntDir)HttpMsieBridge.tlb</TypeLibraryName>
       <HeaderFileName>HttpMsieBridge.h</HeaderFileName>
-      <DllDataFileName>
-      </DllDataFileName>
       <InterfaceIdentifierFileName>HttpMsieBridge_i.c</InterfaceIdentifierFileName>
       <ProxyFileName>HttpMsieBridge_p.c</ProxyFileName>
     </Midl>
@@ -138,8 +132,6 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -164,23 +156,21 @@
       <GenerateStublessProxies>true</GenerateStublessProxies>
       <TypeLibraryName>$(IntDir)HttpMsieBridge.tlb</TypeLibraryName>
       <HeaderFileName>HttpMsieBridge.h</HeaderFileName>
-      <DllDataFileName>
-      </DllDataFileName>
       <InterfaceIdentifierFileName>HttpMsieBridge_i.c</InterfaceIdentifierFileName>
       <ProxyFileName>HttpMsieBridge_p.c</ProxyFileName>
     </Midl>
     <ClCompile>
-      <Optimization>Disabled</Optimization>
+      <Optimization>Full</Optimization>
       <AdditionalIncludeDirectories>.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NOMINMAX;_WINDOWS;STRICT;_CRT_SECURE_NO_WARNINGS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>
-      </DebugInformationFormat>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -200,8 +190,6 @@
       <GenerateStublessProxies>true</GenerateStublessProxies>
       <TypeLibraryName>$(IntDir)HttpMsieBridge.tlb</TypeLibraryName>
       <HeaderFileName>HttpMsieBridge.h</HeaderFileName>
-      <DllDataFileName>
-      </DllDataFileName>
       <InterfaceIdentifierFileName>HttpMsieBridge_i.c</InterfaceIdentifierFileName>
       <ProxyFileName>HttpMsieBridge_p.c</ProxyFileName>
     </Midl>
@@ -211,11 +199,7 @@
       <PreprocessorDefinitions>WIN32;NOMINMAX;_WINDOWS;_CRT_SECURE_NO_WARNINGS;STRICT;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>
-      </DebugInformationFormat>
       <WholeProgramOptimization>true</WholeProgramOptimization>
     </ClCompile>
     <ResourceCompile>

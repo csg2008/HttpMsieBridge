@@ -843,12 +843,22 @@ namespace Process {
 		return difftime(current_time, app_start_timestamp);
 	}
 
+	std::string WideToUtf8(const std::wstring& wideString) {
+		int requiredSize = WideCharToMultiByte(CP_UTF8, 0, wideString.c_str(), -1, 0, 0, NULL, NULL);
+		char* utf8String = new char[requiredSize];
+		int copiedBytes = WideCharToMultiByte(CP_UTF8, 0, wideString.c_str(), -1, utf8String, requiredSize, NULL, NULL);
+		std::string returnedString(utf8String);
+		delete[] utf8String;
+		utf8String = 0;
+		return returnedString;
+	}
+
 	std::string get_command_line() noexcept {
 		std::string ret = "empty";
 		LPWSTR lpCommandLine = GetCommandLine();
 		if (lpCommandLine != nullptr) {
 			std::wstring ws_args = std::wstring(lpCommandLine);
-			ret = std::string(ws_args.begin(), ws_args.end());
+			ret = WideToUtf8(ws_args);
 			ret = escapeJsonString(ret);
 		}
 

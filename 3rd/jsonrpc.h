@@ -573,7 +573,7 @@ namespace jsonrpccxx {
           dispatcher.InvokeNotification(request["method"], request["params"]);
           return json();
         } catch (std::exception &e) {
-          return json();
+          return json{{"msg", e.what()}};
         }
       } else {
         return {{"jsonrpc", "2.0"}, {"id", request["id"]}, {"result", dispatcher.InvokeMethod(request["method"], request["params"])}};
