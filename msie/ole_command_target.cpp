@@ -33,7 +33,7 @@ HRESULT STDMETHODCALLTYPE OleCommandTarget::QueryStatus(
         return E_POINTER;
     bool cmdGroupFound = false;
     for (ULONG nCmd = 0; nCmd < cCmds; nCmd++) {
-        LOG_DEBUG << "OleCommandTarget::QueryStatus(): cmdID = " << prgCmds[nCmd].cmdID;
+        FLOG_DEBUG << "OleCommandTarget::QueryStatus(): cmdID = " << prgCmds[nCmd].cmdID;
         prgCmds[nCmd].cmdf = 0;
     }
     return OLECMDERR_E_UNKNOWNGROUP;
@@ -44,7 +44,7 @@ HRESULT STDMETHODCALLTYPE OleCommandTarget::Exec(
         /* [in] */ DWORD nCmdexecopt,
         /* [in] */ VARIANT *pvaIn,
         /* [out][in] */ VARIANT *pvaOut) {
-    // LOG_DEBUG << "OleCommandTarget::Exec(): nCmdID = " << nCmdID;
+    // FLOG_DEBUG << "OleCommandTarget::Exec(): nCmdID = " << nCmdID;
 
     HRESULT hr = S_OK;
 	if (pguidCmdGroup && IsEqualGUID(*pguidCmdGroup, CGID_DocHostCommandHandler)) {

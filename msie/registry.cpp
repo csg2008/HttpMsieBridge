@@ -35,7 +35,7 @@ bool CreateRegistryKey(HKEY hKeyRoot, const wchar_t* path) {
     if (result == ERROR_SUCCESS) {
         ret = true;
     } else {
-        LOG_WARNING << "CreateRegistryKey() failed: RegCreateKeyEx() failed: path = "  << WideToUtf8(path);
+        FLOG_WARNING << "CreateRegistryKey() failed: RegCreateKeyEx() failed: path = "  << WideToUtf8(path);
         _ASSERT(false);
     }
     if (hKey)
@@ -56,14 +56,14 @@ bool CreateRegistryString(HKEY hKeyRoot, const wchar_t* path, const wchar_t* str
         if (result == ERROR_SUCCESS) {
             ret = true;
         } else {
-            LOG_WARNING << "CreateRegistryString() failed: "
+            FLOG_WARNING << "CreateRegistryString() failed: "
                     "RegSetValueEx() failed: "
                     "stringName = " << WideToUtf8(stringName) <<
                     "stringValue = " << WideToUtf8(stringValue);
             _ASSERT(false);
         }
     } else {
-        LOG_WARNING << "CreateRegistryString() failed: "
+        FLOG_WARNING << "CreateRegistryString() failed: "
                 "RegCreateKeyEx() failed: path = "  << WideToUtf8(path);
         _ASSERT(false);
     }

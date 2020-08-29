@@ -118,7 +118,7 @@ bool CenterWindowRelativeToParent(HWND window, HWND parent) {
 void GetCorrectWindowSize(int* width, int* height) {
     int max_width = GetSystemMetrics(SM_CXMAXIMIZED) - 96;
     int max_height = GetSystemMetrics(SM_CYMAXIMIZED) - 64;
-    LOG_DEBUG << "Window max width/height = " << max_width << "/" << max_height;
+    FLOG_DEBUG << "Window max width/height = " << max_width << "/" << max_height;
     bool max_size_exceeded = (*width > max_width \
             || *height > max_height);
     if (*width > max_width) {
@@ -128,7 +128,7 @@ void GetCorrectWindowSize(int* width, int* height) {
         *height = max_height;
     }
     if (max_size_exceeded) {
-        LOG_DEBUG << "Window max size exceeded, new width/height = "
+        FLOG_DEBUG << "Window max size exceeded, new width/height = "
                     << *width << "/" << *height;
     }
 }
@@ -149,7 +149,7 @@ void GetDpiAwareWindowSize(int* width, int* height) {
     if (newZoomLevel > 0.0) {
         *width = *width + (int)ceil(newZoomLevel * 0.25 * (*width));
         *height = *height + (int)ceil(newZoomLevel * 0.25 * (*height));
-        LOG_INFO << "DPI, window enlarged by "
+        FLOG_INFO << "DPI, window enlarged by "
                   << ceil(newZoomLevel * 0.25 * 100) << "%"
                   << " new width/height = " << *width << "/" << *height;
     }

@@ -80,7 +80,7 @@ HRESULT STDMETHODCALLTYPE ClickEvents::Invoke(
     IDispatchPtr documentDispatch;
     hr = webBrowser2->get_Document(&documentDispatch);
     if (FAILED(hr) || !documentDispatch) {
-        LOG_WARNING << "ClickEvents::Invoke() failed: "
+        FLOG_WARNING << "ClickEvents::Invoke() failed: "
                        "get_Document() failed";
         return S_OK;
     }
@@ -88,7 +88,7 @@ HRESULT STDMETHODCALLTYPE ClickEvents::Invoke(
     hr = documentDispatch->QueryInterface(IID_IHTMLDocument2,
                                           (void**)&htmlDocument2);
     if (FAILED(hr) || !htmlDocument2) {
-        LOG_WARNING << "ClickEvents::Invoke() failed: "
+        FLOG_WARNING << "ClickEvents::Invoke() failed: "
                        "QueryInterface(IHTMLDocument2) failed";
         return S_OK;
     }
@@ -96,21 +96,21 @@ HRESULT STDMETHODCALLTYPE ClickEvents::Invoke(
     hr = htmlDocument2->get_parentWindow(
             static_cast<IHTMLWindow2**>(&htmlWindow2));
     if (FAILED(hr) || !htmlWindow2) {
-        LOG_WARNING << "ClickEvents::Invoke() failed: "
+        FLOG_WARNING << "ClickEvents::Invoke() failed: "
                        "IHTMLDocument2->get_parentWindow() failed";
         return S_OK;
     }
     IHTMLEventObjPtr htmlEvent;
     hr = htmlWindow2->get_event(&htmlEvent);
     if (FAILED(hr) || !htmlEvent) {
-        LOG_WARNING << "ClickEvents::Invoke() failed: "
+        FLOG_WARNING << "ClickEvents::Invoke() failed: "
                        "IHTMLWindow2->get_event() failed";
         return S_OK;
     }
     IHTMLElementPtr htmlElement;
     hr = htmlEvent->get_srcElement(&htmlElement);
     if (FAILED(hr) || !htmlElement) {
-        LOG_WARNING << "ClickEvents::Invoke() failed: "
+        FLOG_WARNING << "ClickEvents::Invoke() failed: "
                        "IHTMLEventObj->get_srcElement() failed";
         return S_OK;
     }
@@ -119,7 +119,7 @@ HRESULT STDMETHODCALLTYPE ClickEvents::Invoke(
     VariantInit(&attrValue);
     hr = htmlElement->getAttribute(hrefAttr, 0, &attrValue);
     if (FAILED(hr)) {
-        LOG_WARNING << "ClickEvents::Invoke() failed: "
+        FLOG_WARNING << "ClickEvents::Invoke() failed: "
                        "IHTMLElement->getAttribute() failed";
         return S_OK;
     }
@@ -135,7 +135,7 @@ HRESULT STDMETHODCALLTYPE ClickEvents::Invoke(
         //     eventReturn.vt = VT_BOOL;
         //     eventReturn.boolVal = VARIANT_FALSE;
         //     htmlEvent->put_returnValue(eventReturn);
-        //     LOG_WARNING << "Shell open url:" << ConvertA(href);
+        //     FLOG_WARNING << "Shell open url:" << ConvertA(href);
         //     ShellExecute(0, L"open", href, 0, 0, SW_SHOWNORMAL);
         // }
     }

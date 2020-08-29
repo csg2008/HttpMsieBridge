@@ -91,16 +91,16 @@ bool CheckIeRequire() {
     // versions:
     // http://support.microsoft.com/kb/969393
     std::string Version = GetIeVersion();
-    LOG_INFO << "IE version from registry: " << Version;
+    FLOG_INFO << "IE version from registry: " << Version;
 
     // Version from registry must be valid, ohterwise for example comparing "abc" will give true.
     if (IsLessThanVersion(Version, MIN_IE_VERSION)) {
-        LOG_ERROR << "program require min ie version: " << MIN_IE_VERSION;
+        FLOG_ERROR << "program require min ie version: " << MIN_IE_VERSION;
         return false;
     }
 
     if (0 != Fix_ie_compat_mode()) {
-        LOG_ERROR << "program require min ie version: ";
+        FLOG_ERROR << "program require min ie version: ";
         return false;
     }
 

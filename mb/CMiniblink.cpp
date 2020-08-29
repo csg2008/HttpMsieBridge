@@ -406,7 +406,7 @@ namespace HttpBridge {
 	}
 
 	void CMiniblink::OnConsole(wkeConsoleLevel level, LPCWSTR message, LPCWSTR sourceName, unsigned sourceLine, LPCWSTR stackTrace) {
-		LOG_INFO << "OnConsole source " << WideToUtf8(sourceName) << ":" << sourceLine << " " << WideToUtf8(message);
+		FLOG_INFO << "OnConsole source " << WideToUtf8(sourceName) << ":" << sourceLine << " " << WideToUtf8(message);
 	}
 
 	bool CMiniblink::OnRequestBegin(const char * url, CNetJob * job) {

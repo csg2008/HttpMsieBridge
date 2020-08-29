@@ -43,14 +43,14 @@ HRESULT STDMETHODCALLTYPE ExternalDispatch::QueryInterface(
         *ppvObject = static_cast<IUnknown*>(this);
         static bool logged = false;
         if (!logged) {
-            LOG_DEBUG << "ExternalDispatch::QueryInterface(): IUnknown";
+            FLOG_DEBUG << "ExternalDispatch::QueryInterface(): IUnknown";
             logged = true;
         }
     } else if (riid == IID_IDispatch) {
         *ppvObject = static_cast<IDispatch*>(this);
         static bool logged = false;
         if (!logged) {
-            LOG_DEBUG << "ExternalDispatch::QueryInterface(): IUnknown";
+            FLOG_DEBUG << "ExternalDispatch::QueryInterface(): IUnknown";
             logged = true;
         }
     } else if (   riid == IID_IProxyManager
@@ -65,7 +65,7 @@ HRESULT STDMETHODCALLTYPE ExternalDispatch::QueryInterface(
         if (FILELog::ReportingLevel() >= logDEBUG) {
             char riid_name[128];
             GUID_TO_CHAR(&riid, riid_name, _countof(riid_name));
-            LOG_DEBUG << "ExternalDispatch::QueryInterface(): "
+            FLOG_DEBUG << "ExternalDispatch::QueryInterface(): "
                          "unknown interface, riid = " << riid_name;
         }
         *ppvObject = 0;
@@ -140,7 +140,7 @@ HRESULT STDMETHODCALLTYPE ExternalDispatch::Invoke(
 
     //when web page call window.external.CppCall
     if(dispId == 100) {
-        LOG_DEBUG << "CppCall uData = " << pDispParams->rgvarg[0].intVal;
+        FLOG_DEBUG << "CppCall uData = " << pDispParams->rgvarg[0].intVal;
         return S_OK;
     }
 

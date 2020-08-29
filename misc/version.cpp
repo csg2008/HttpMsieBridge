@@ -165,7 +165,7 @@ void GetAllHDSerialNumber() {
     for (int nDriveNum = 0; nDriveNum < MAX_IDE_DRIVES; nDriveNum++) {
         size_t ulLen = GetHDSerial(szBuff, sizeof(szBuff), nDriveNum);
         if (ulLen > 0) {
-            LOG_DEBUG << "disk: " << nDriveNum << " sn: " << std::string(szBuff);
+            FLOG_DEBUG << "disk: " << nDriveNum << " sn: " << std::string(szBuff);
         }
     }
 }

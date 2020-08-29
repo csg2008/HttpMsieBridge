@@ -128,14 +128,15 @@ typedef struct _wkeProxy {
     char password[50];
 } wkeProxy;
 
-typedef enum _wkeSettingMask{
+typedef enum _wkeSettingMask {
     WKE_SETTING_PROXY = 1,
-    WKE_SETTING_PAINTCALLBACK_IN_OTHER_THREAD = 1 << 2,
+    WKE_SETTING_EXTENSION = 1 << 2, // 测试功能，请勿调用
 } wkeSettingMask;
 
 typedef struct _wkeSettings {
     wkeProxy proxy;
     unsigned int mask;
+    const char* extension;
 } wkeSettings;
 
 typedef struct _wkeViewSettings {

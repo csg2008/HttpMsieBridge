@@ -135,7 +135,7 @@ SHELLEXECUTEINFO exec(std::string exeFile, int num, bool show, bool wait, bool a
         }
     }
 
-    LOG_INFO << "Executing " << exeFile << " finish, code: " << seInfo.hInstApp << " pid:" << pid;
+    FLOG_INFO << "Executing " << exeFile << " finish, code: " << seInfo.hInstApp << " pid:" << pid;
 
     return seInfo;
 }
@@ -257,7 +257,7 @@ std::string GetAnsiTempDirectory() {
     if (isShortPath || !AnsiDirectoryExists(WideToUtf8(tempPath))) {
         // This code will also run if the dir returned by
         // GetTempPathW was invalid.
-        LOG_DEBUG << "The temp directory returned by OS contains "
+        FLOG_DEBUG << "The temp directory returned by OS contains "
                 "unicode characters: " << WideToUtf8(tempPath).c_str();
         // Fallback 1: C:\\Windows\\Temp
         // -----------------------------
@@ -361,7 +361,7 @@ bool ReadFileContent(const char* pFilePath, const char* pReadMode, std::string& 
 	FILE* fp = NULL;
 	fopen_s(&fp, pFilePath, pReadMode);
 	if (NULL == fp) {
-		LOG_ERROR<<"file path: "<<pFilePath<<" is not exists";
+		FLOG_ERROR<<"file path: "<<pFilePath<<" is not exists";
 		return false;
 	}
 

@@ -94,7 +94,7 @@ HRESULT STDMETHODCALLTYPE OleInPlaceSite::OnPosRectChange(
             browserWindow_->GetWebBrowser2();
     hr = webBrowser2->QueryInterface(IID_IOleObject, (void**)&oleObject);
     if (FAILED(hr) || !oleObject) {
-        LOG_WARNING << "OleInPlaceSite::OnPosRectChange() failed: "
+        FLOG_WARNING << "OleInPlaceSite::OnPosRectChange() failed: "
                        "QueryInterface(IOleObject) failed";
         return E_UNEXPECTED;
     }
@@ -102,13 +102,13 @@ HRESULT STDMETHODCALLTYPE OleInPlaceSite::OnPosRectChange(
     hr = oleObject->QueryInterface(IID_IOleInPlaceObject,
                                    (void**)&oleInPlaceObject);
     if (FAILED(hr) || !oleInPlaceObject) {
-        LOG_WARNING << "OleInPlaceSite::OnPosRectChange() failed: "
+        FLOG_WARNING << "OleInPlaceSite::OnPosRectChange() failed: "
                        "QueryInterface(IOleInPlaceObject) failed";
         return E_UNEXPECTED;
     }
     hr = oleInPlaceObject->SetObjectRects(lprcPosRect, lprcPosRect);
     if (FAILED(hr)) {
-        LOG_WARNING << "OleInPlaceSite::OnPosRectChange() failed: "
+        FLOG_WARNING << "OleInPlaceSite::OnPosRectChange() failed: "
                        "IOleInPlaceObject->SetObjectRects() failed";
         return E_UNEXPECTED;
     }

@@ -35,21 +35,21 @@ HRESULT STDMETHODCALLTYPE OleClientSite::QueryInterface(
         *ppvObject = static_cast<IUnknown*>(this);
         static bool logged = false;
         if (!logged) {
-            LOG_DEBUG << "OleClientSite::QueryInterface(): IUnknown";
+            FLOG_DEBUG << "OleClientSite::QueryInterface(): IUnknown";
             logged = true;
         }
     } else if (riid == IID_IOleClientSite) {
         *ppvObject = static_cast<IOleClientSite*>(this);
         static bool logged = false;
         if (!logged) {
-            LOG_DEBUG << "OleClientSite::QueryInterface(): IOleClientSite";
+            FLOG_DEBUG << "OleClientSite::QueryInterface(): IOleClientSite";
             logged = true;
         }
     } else if (riid == IID_IOleInPlaceSite) {
         *ppvObject = static_cast<IOleInPlaceSite*>(&oleInPlaceSite_);
         static bool logged = false;
         if (!logged) {
-            LOG_DEBUG << "OleClientSite::QueryInterface(): IOleInPlaceSite";
+            FLOG_DEBUG << "OleClientSite::QueryInterface(): IOleInPlaceSite";
             logged = true;
         }
     } else if (riid == IID_IOleInPlaceFrame) {
@@ -58,42 +58,42 @@ HRESULT STDMETHODCALLTYPE OleClientSite::QueryInterface(
         *ppvObject = static_cast<IOleInPlaceFrame*>(&oleInPlaceFrame_);
         static bool logged = false;
         if (!logged) {
-            LOG_DEBUG << "OleClientSite::QueryInterface(): IOleInPlaceFrame";
+            FLOG_DEBUG << "OleClientSite::QueryInterface(): IOleInPlaceFrame";
             logged = true;
         }
     } else if (riid == IID_IServiceProvider) {
         *ppvObject = static_cast<IServiceProvider*>(&serviceProvider_);
         static bool logged = false;
         if (!logged) {
-            LOG_DEBUG << "OleClientSite::QueryInterface(): IServiceProvider";
+            FLOG_DEBUG << "OleClientSite::QueryInterface(): IServiceProvider";
             logged = true;
         }
     } else if (riid == DIID_DWebBrowserEvents2) {
         *ppvObject = static_cast<DWebBrowserEvents2*>(&browserEvents2_);
         static bool logged = false;
         if (!logged) {
-            LOG_DEBUG << "OleClientSite::QueryInterface(): DWebBrowserEvents2";
+            FLOG_DEBUG << "OleClientSite::QueryInterface(): DWebBrowserEvents2";
             logged = true;
         }
     } else if (riid == IID_IDocHostShowUI) {
         *ppvObject = static_cast<IDocHostShowUI*>(&docHostShowUi_);
         static bool logged = false;
         if (!logged) {
-            LOG_DEBUG << "OleClientSite::QueryInterface(): IDocHostShowUI";
+            FLOG_DEBUG << "OleClientSite::QueryInterface(): IDocHostShowUI";
             logged = true;
         }
     } else if (riid == IID_IDocHostUIHandler) {
         *ppvObject = static_cast<IDocHostUIHandler*>(&docHostUiHandler_);
         static bool logged = false;
         if (!logged) {
-            LOG_DEBUG << "OleClientSite::QueryInterface(): IDocHostUIHandler";
+            FLOG_DEBUG << "OleClientSite::QueryInterface(): IDocHostUIHandler";
             logged = true;
         }
     } else if (riid == IID_IDispatch) {
         *ppvObject = static_cast<IDispatch*>(&hostDispatch_);
         static bool logged = false;
         if (!logged) {
-            LOG_DEBUG << "OleClientSite::QueryInterface(): IDispatch";
+            FLOG_DEBUG << "OleClientSite::QueryInterface(): IDispatch";
             logged = true;
         }
     /*} else if (riid == IID_IOleCommandTarget) {
@@ -101,7 +101,7 @@ HRESULT STDMETHODCALLTYPE OleClientSite::QueryInterface(
         static bool logged = false;
         if (!logged) {
             // Too many debug messages, turning off:
-            // LOG_DEBUG << "OleClientSite::QueryInterface(): IOleCommandTarget";
+            // FLOG_DEBUG << "OleClientSite::QueryInterface(): IOleCommandTarget";
             logged = true;
         }*/
     } else if (   riid == IID_IDocHostUIHandler2
@@ -116,7 +116,7 @@ HRESULT STDMETHODCALLTYPE OleClientSite::QueryInterface(
             char riid_name[128];
             GUID_TO_CHAR(&riid, riid_name, _countof(riid_name));
             if (std::string(riid_name) != "{c90db44a-1902-451e-bdf0-5c89660b528c}") {
-                LOG_DEBUG << "OleClientSite::QueryInterface(): "
+                FLOG_DEBUG << "OleClientSite::QueryInterface(): "
                              "unknown interface, riid = " << riid_name;
             }
         }

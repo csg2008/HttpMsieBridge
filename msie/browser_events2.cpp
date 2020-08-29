@@ -87,9 +87,9 @@ HRESULT STDMETHODCALLTYPE BrowserEvents2::Invoke(
            you need to create the popup window in this event
            and assign the dispatch interface of the new popup
            browser to the first parameter of NewWindow3. */
-        LOG_DEBUG << "BrowserEvents2::NewWindow3()";
+        FLOG_DEBUG << "BrowserEvents2::NewWindow3()";
         if (pDispParams->cArgs != 5) {
-            LOG_WARNING << "BrowserEvents2::NewWindow3() failed: Expected 5 arguments";
+            FLOG_WARNING << "BrowserEvents2::NewWindow3() failed: Expected 5 arguments";
             _ASSERT(false);
             return DISP_E_BADPARAMCOUNT;
         }
@@ -108,7 +108,7 @@ HRESULT STDMETHODCALLTYPE BrowserEvents2::Invoke(
         _ASSERT(popupHandle);
         BrowserWindow* browserWindow = GetBrowserWindow(std::to_string((long long) popupHandle));
         if (!browserWindow) {
-            LOG_WARNING << "BrowserEvents2::NewWindow3() failed: CreatePopupWindow() failed";
+            FLOG_WARNING << "BrowserEvents2::NewWindow3() failed: CreatePopupWindow() failed";
             // Cancel parameter. Current navigation should be cancelled.
             *pDispParams->rgvarg[3].pboolVal = VARIANT_TRUE;
             return S_OK;
@@ -117,7 +117,7 @@ HRESULT STDMETHODCALLTYPE BrowserEvents2::Invoke(
         IDispatchPtr dispatch;
         hr = webBrowser2->get_Application(&dispatch);
         if (FAILED(hr) || !dispatch) {
-            LOG_WARNING << "BrowserEvents2::NewWindow3() failed: webBrowser2->get_Application() failed";
+            FLOG_WARNING << "BrowserEvents2::NewWindow3() failed: webBrowser2->get_Application() failed";
             return S_OK;
         }
 
@@ -144,25 +144,25 @@ HRESULT STDMETHODCALLTYPE BrowserEvents2::Invoke(
         _ASSERT(pDispParams->cArgs == 1);
         _ASSERT(pDispParams->rgvarg[0].vt == VT_I4); // nWidth
         long width = pDispParams->rgvarg[0].lVal;
-        // LOG_DEBUG << "BrowserEvents2::WindowSetWidth(): width = " << width;
+        // FLOG_DEBUG << "BrowserEvents2::WindowSetWidth(): width = " << width;
         browserWindow_->SetWidth(width);
     } else if (dispId == DISPID_WINDOWSETHEIGHT) {
         _ASSERT(pDispParams->cArgs == 1);
         _ASSERT(pDispParams->rgvarg[0].vt == VT_I4); // nHeight
         long height = pDispParams->rgvarg[0].lVal;
-        // LOG_DEBUG << "BrowserEvents2::WindowSetHeight(): height = " << height;
+        // FLOG_DEBUG << "BrowserEvents2::WindowSetHeight(): height = " << height;
         browserWindow_->SetHeight(height);
     } else if (dispId == DISPID_WINDOWSETTOP) {
         _ASSERT(pDispParams->cArgs == 1);
         _ASSERT(pDispParams->rgvarg[0].vt == VT_I4); // nTop
         long top = pDispParams->rgvarg[0].lVal;
-        // LOG_DEBUG << "BrowserEvents2::WindowSetTop(): top = " << top;
+        // FLOG_DEBUG << "BrowserEvents2::WindowSetTop(): top = " << top;
         browserWindow_->SetTop(top);
     } else if (dispId == DISPID_WINDOWSETLEFT) {
         _ASSERT(pDispParams->cArgs == 1);
         _ASSERT(pDispParams->rgvarg[0].vt == VT_I4); // nLeft
         long left = pDispParams->rgvarg[0].lVal;
-        // LOG_DEBUG << "BrowserEvents2::WindowSetLeft(): left = " << left;
+        // FLOG_DEBUG << "BrowserEvents2::WindowSetLeft(): left = " << left;
         browserWindow_->SetLeft(left);
     } else if (dispId == DISPID_TITLECHANGE) {
         _ASSERT(pDispParams->cArgs == 1);
@@ -170,10 +170,10 @@ HRESULT STDMETHODCALLTYPE BrowserEvents2::Invoke(
         BSTR title = pDispParams->rgvarg[0].bstrVal;
         browserWindow_->SetTitle(title);
 
-        // LOG_DEBUG << "BrowserEvents2::TitleChange(): setting popup title = " << WideToUtf8(title);
+        // FLOG_DEBUG << "BrowserEvents2::TitleChange(): setting popup title = " << WideToUtf8(title);
     } else if (dispId == DISPID_BEFORENAVIGATE || dispId == DISPID_BEFORENAVIGATE2) {
         if (pDispParams->cArgs != 7) {
-            LOG_WARNING << "BrowserEvents2::BeforeNavigate() failed: Expected 7 arguments";
+            FLOG_WARNING << "BrowserEvents2::BeforeNavigate() failed: Expected 7 arguments";
             _ASSERT(false);
             return DISP_E_BADPARAMCOUNT;
         }
@@ -183,7 +183,7 @@ HRESULT STDMETHODCALLTYPE BrowserEvents2::Invoke(
         browserWindow_ -> GetOrgUrl(WideToUtf8(navigateUrl));
     } else if (dispId == DISPID_NAVIGATEERROR) {
         if (pDispParams->cArgs != 5) {
-            LOG_WARNING << "BrowserEvents2::NavigateError() failed: Expected 5 arguments";
+            FLOG_WARNING << "BrowserEvents2::NavigateError() failed: Expected 5 arguments";
             _ASSERT(false);
             return DISP_E_BADPARAMCOUNT;
         }
@@ -204,7 +204,7 @@ HRESULT STDMETHODCALLTYPE BrowserEvents2::Invoke(
         const wchar_t* navigateUrl = pDispParams->rgvarg[3].pvarVal->bstrVal;
         int statusCode = pDispParams->rgvarg[1].pvarVal->lVal;
 
-        LOG_DEBUG << "BrowserEvents2::NavigateError(), url: " << WideToUtf8(navigateUrl) << " status code: " << statusCode;
+        FLOG_DEBUG << "BrowserEvents2::NavigateError(), url: " << WideToUtf8(navigateUrl) << " status code: " << statusCode;
 
         if (browserWindow_->DisplayErrorPage(navigateUrl, statusCode)) {
             *pDispParams->rgvarg[0].pboolVal = VARIANT_TRUE;
@@ -217,11 +217,11 @@ HRESULT STDMETHODCALLTYPE BrowserEvents2::Invoke(
         // Seems like this event is never being called, it should be
         // called when executing "window.close()", but it's not.
         // Use WM_PARENTNOTIFY instead to be notified when window is closing.
-        LOG_DEBUG << "BrowserEvents2::WindowClosing()";
+        FLOG_DEBUG << "BrowserEvents2::WindowClosing()";
         return S_OK;
         /*
         if (pDispParams->cArgs != 2) {
-            LOG_WARNING << "BrowserEvents2::WindowClosing() failed: "
+            FLOG_WARNING << "BrowserEvents2::WindowClosing() failed: "
                     "Expected 2 arguments";
             _ASSERT(false);
             return DISP_E_BADPARAMCOUNT;
@@ -247,7 +247,7 @@ HRESULT STDMETHODCALLTYPE BrowserEvents2::Invoke(
             std::string url(bstrUrl);
             std::string charset(bstrCharset);
 
-            LOG_DEBUG << "document complete charset:" << charset << " url:" << url;
+            FLOG_DEBUG << "document complete charset:" << charset << " url:" << url;
 
             if ("about:blank" != url && "" != callback) {
                 IEMessage["url"] = url;
@@ -264,7 +264,7 @@ HRESULT STDMETHODCALLTYPE BrowserEvents2::Invoke(
                     httplib::Client cli(parser.hostname().c_str(), parser.httpPort());
                     auto res = cli.Post(parser.path().c_str(), msg.c_str(), "text/json");
 
-                    LOG_DEBUG << "notify:" << callback << " code:" << (int) res->status;
+                    FLOG_DEBUG << "notify:" << callback << " code:" << (int) res->status;
                 }
             }
         }

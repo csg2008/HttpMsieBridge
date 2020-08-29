@@ -114,7 +114,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 browser->OnResize(uMsg, wParam, lParam);
                 return 0;
             } else {
-                LOG_WARNING << "WindowProc(): event WM_SIZE: could not fetch BrowserWindow";
+                FLOG_WARNING << "WindowProc(): event WM_SIZE: could not fetch BrowserWindow";
             }
             break;
         case WM_CREATE:
@@ -126,14 +126,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             StoreBrowserWindow(std::to_string((long long) hwnd), browser);
             timer = SetTimer(hwnd, BROWSER_GENERIC_TIMER, 50, 0);
             if (!timer) {
-                LOG_WARNING << "WindowProc(): event WM_CREATE: SetTimer() failed";
+                FLOG_WARNING << "WindowProc(): event WM_CREATE: SetTimer() failed";
             }
             return 0;
         case WM_SYSCOMMAND:
             if (wParam == IDM_ABOUT) {
                 MessageBox(NULL, L"welcome to use http mise bridge\nwebsite: http://github.com/csg800", ConvertW(title.c_str()), MB_OK | MB_ICONINFORMATION);
             } else if (wParam == SC_MINIMIZE && minimize_to_tray) {
-                LOG_DEBUG << "Minimize to tray";
+                FLOG_DEBUG << "Minimize to tray";
                 ShowWindow(hwnd, SW_MINIMIZE);
                 Sleep(200);
                 ShowWindow(hwnd, SW_HIDE);
@@ -147,7 +147,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         break;
         case WM_TRAY_MESSAGE:
             if (lParam == WM_LBUTTONDOWN) {
-                LOG_DEBUG << "Restore from tray";
+                FLOG_DEBUG << "Restore from tray";
                 ShowWindow(hwnd, SW_SHOW);
                 ShowWindow(hwnd, SW_RESTORE);
                 SetForegroundWindow(hwnd);
@@ -161,7 +161,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 if (cmd == IDM_ABOUT) {
                     MessageBox(NULL, L"welcome to use http mise bridge\nwebsite: http://github.com/csg800", ConvertW(title.c_str()), MB_OK | MB_ICONINFORMATION);
                 } else if(cmd == IDM_SHOW) {
-                    LOG_DEBUG << "Restore from tray";
+                    FLOG_DEBUG << "Restore from tray";
                     ShowWindow(hwnd, SW_SHOW);
                     ShowWindow(hwnd, SW_RESTORE);
                     SetForegroundWindow(hwnd);
@@ -203,7 +203,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     browser->OnTimer(uMsg, wParam, lParam);
                     return 0;
                 } else {
-                    LOG_WARNING << "WindowProc(): event WM_TIMER failed: could not fetch BrowserWindow";
+                    FLOG_WARNING << "WindowProc(): event WM_TIMER failed: could not fetch BrowserWindow";
                 }
             }
             break;
@@ -215,7 +215,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             } else {
                 // GetMinMaxInfo may fail during window creation, so
                 // log severity is only DEBUG.
-                LOG_DEBUG << "WindowProc(): event WM_GETMINMAXINFO: could not fetch BrowserWindow";
+                FLOG_DEBUG << "WindowProc(): event WM_GETMINMAXINFO: could not fetch BrowserWindow";
             }
             break;
         case WM_SETFOCUS:
@@ -224,30 +224,30 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 browser->SetFocus();
                 return 0;
             } else {
-                LOG_DEBUG << "WindowProc(): event WM_SETFOCUS: could not fetch BrowserWindow";
+                FLOG_DEBUG << "WindowProc(): event WM_SETFOCUS: could not fetch BrowserWindow";
             }
             break;
         /*
         case WM_PARENTNOTIFY:
-            LOG_DEBUG << "WM_PARENTNOTIFY";
+            FLOG_DEBUG << "WM_PARENTNOTIFY";
             browser = GetBrowserWindow(hwnd);
             if (browser) {
                 childEvent = LOWORD(wParam);
                 // For example WM_LBUTTONDOWN.
-                LOG_DEBUG << "childEvent = " << childEvent;
+                FLOG_DEBUG << "childEvent = " << childEvent;
                 if (childEvent == WM_DESTROY) {
-                    LOG_DEBUG << "childEvent == WM_DESTROY";
+                    FLOG_DEBUG << "childEvent == WM_DESTROY";
                     childHandle = (HWND)HIWORD(wParam);
                     shellBrowserHandle = browser->GetShellBrowserHandle();
-                    LOG_DEBUG << "childHandle = " << childHandle;
-                    LOG_DEBUG << "shellBrowserHandle = " << shellBrowserHandle;
+                    FLOG_DEBUG << "childHandle = " << childHandle;
+                    FLOG_DEBUG << "shellBrowserHandle = " << shellBrowserHandle;
                     if (childHandle && shellBrowserHandle
                             && childHandle == shellBrowserHandle) {
-                        LOG_DEBUG << "!!!!!!!!!!!!!!!!";
+                        FLOG_DEBUG << "!!!!!!!!!!!!!!!!";
                     }
                 }
             } else {
-                LOG_DEBUG << "WindowProc(): event WM_PARENTNOTIFY: "
+                FLOG_DEBUG << "WindowProc(): event WM_PARENTNOTIFY: "
                         "could not fetch BrowserWindow";
             }
             break;
@@ -268,7 +268,7 @@ bool ProcessKeyboardMessage(MSG* msg, std::string engine) {
                 if (browser->TranslateAccelerator(msg))
                     return true;
             } else {
-                LOG_DEBUG << "ProcessKeyboardMessage(): could not fetch BrowserWindow";
+                FLOG_DEBUG << "ProcessKeyboardMessage(): could not fetch BrowserWindow";
             }
         }
     } else {
@@ -299,7 +299,7 @@ bool initMSIEEntry() {
 
     // check ie min require
     if (!CheckIeRequire()) {
-        LOG_ERROR << "check ie min require failed, quit...";
+        FLOG_ERROR << "check ie min require failed, quit...";
         return false;
     }
 
@@ -337,15 +337,15 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrCm
 
     InitializeLogging(show_console, log_level, log_file);
     
-    LOG_INFO << "--------------------------------------------------------";
-    LOG_INFO << "Started application http msie bridge, engine :" << (*settings)["integration"]["engine"].get<std::string>();
+    FLOG_INFO << "--------------------------------------------------------";
+    FLOG_INFO << "Started application http msie bridge, engine :" << (*settings)["integration"]["engine"].get<std::string>();
 
     GetAllHDSerialNumber();
 
     if (log_file.length()) {
-        LOG_INFO << "Logging to: " << log_file << ", Log level = " << FILELog::ToString(FILELog::ReportingLevel());
+        FLOG_INFO << "Logging to: " << log_file << ", Log level = " << FILELog::ToString(FILELog::ReportingLevel());
     } else {
-        LOG_INFO << "No logging file set, Log level = " << FILELog::ToString(FILELog::ReportingLevel());
+        FLOG_INFO << "No logging file set, Log level = " << FILELog::ToString(FILELog::ReportingLevel());
     }
 
     // Command line arguments
@@ -365,7 +365,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrCm
             }
         }
     } else {
-        LOG_WARNING << "CommandLineToArgvW() failed";
+        FLOG_WARNING << "CommandLineToArgvW() failed";
     }
 
     // startup spec application
@@ -374,7 +374,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrCm
         shellInfo = &exec(startup, 3, false);
 
         if (NULL == shellInfo) {
-            LOG_ERROR << "Startup spec application " << startup << " failed";
+            FLOG_ERROR << "Startup spec application " << startup << " failed";
             return -1;
         }
     }
@@ -394,14 +394,14 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrCm
     HttpBridge::CMiniblink *window;
     if ("msie" == engine) {
         if (!initMSIEEntry()) {
-            LOG_ERROR << "init engine msie failed";
+            FLOG_ERROR << "init engine msie failed";
             return 1;
         }
 
         g_hwnd = CreateMainWindow(hInstance, nCmdShow, CLASS_NAME_MSIE_EX, WindowProc);
     } else {
         if (!initMBEntry()) {
-            LOG_ERROR << "init engine mb failed";
+            FLOG_ERROR << "init engine mb failed";
             return 1;
         }
 
@@ -424,7 +424,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrCm
     int ret;
     while ((ret = GetMessage(&msg, 0, 0, 0)) != 0) {
         if (ret == -1) {
-            LOG_ERROR << "WinMain.GetMessage() returned -1";
+            FLOG_ERROR << "WinMain.GetMessage() returned -1";
             _ASSERT(false);
             break;
         } else {
@@ -439,8 +439,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpstrCm
         OleUninitialize();
     }
 
-    LOG_INFO << "Ended application";
-    LOG_INFO << "--------------------------------------------------------";
+    FLOG_INFO << "Ended application";
+    FLOG_INFO << "--------------------------------------------------------";
 
     ShutdownLogging();
 

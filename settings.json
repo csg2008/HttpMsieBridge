@@ -1,57 +1,75 @@
 {
-    "bridge": {
-        "http":{
-            "listen": 8080,
-            "wwwroot": "www",
-            "hides": [],
-            "index": ["index.html", "index.php"],
-            "404_handler": "/pretty-urls.php"
-        },
-        "msie": {
-            "error_page": "www/_error-page.html",
-            "smooth_scroll": false,
-            "enable_f5_refresh": true,
-            "show_context_menu": true,
-            "use_themes": true,
-            "disable_script_debugger": true,
-            "hide_dialog_boxes": false,
-            "silent_operations": true,
-            "autocomplete_forms": false,
-            "windowed_select_control": true,
-            "disable_scrollbars": false,
-            "flat_scrollbars": false,
-            "utf8_url_encoding": true
-        },
-        "window":{
-            "title": "PHP Desktop MSIE",
-            "icon": "",
-            "popup_icon": "",
-            "popup_title": "",
-            "popup_default_size": [800, 600],
-            "default_size": [1024, 700],
-            "minimum_size": [800, 600],
-            "maximum_size": [0, 0],
-            "disable_maximize_button": false,
-            "center_relative_to_parent": true,
-            "center_on_screen": true,
-            "start_maximized": false,
-            "start_fullscreen": false,
-            "always_on_top": false,
-            "dpi_aware": false,
-            "minimize_to_tray": true,
-            "minimize_to_tray_message": "Minimized to tray",
-            "startup_to_tray_message": "welcome to use http msie bridge",
-            "instance": true
-        },
-        "logger": {
-            "show_console": false,
-            "log_level": "DEBUG4",
-            "log_file": "debug.log"
-        },
-        "integration":{
-            "callback":"http://127.0.0.1:8088/notify.html",
-            "homepage":"http://www.singlewindow.sc.cn/",
-            "startup": "E:\\Web\\Software\\PHP72\\php.exe -S 127.0.0.1:8088 E:\\GCC\\code\\msie\\HttpMsieBridge\\x64\\Debug\\test.php"
+    "msie": {
+        "error_page": "www/_error-page.html",
+        "smooth_scroll": false,
+        "enable_f5_refresh": true,
+        "show_context_menu": true,
+        "use_themes": true,
+        "disable_script_debugger": true,
+        "hide_dialog_boxes": false,
+        "silent_operations": true,
+        "autocomplete_forms": false,
+        "windowed_select_control": true,
+        "disable_scrollbars": false,
+        "flat_scrollbars": false,
+        "utf8_url_encoding": true
+    },
+    "chrome": {
+        "log_file": "log\\chrome.log",
+        "log_console": "log\\console.log",
+        "log_severity": "verbose",
+        "cache_path": "webcache",
+        "external_drag": true,
+        "external_navigation": true,
+        "reload_page_F5": true,
+        "devtools_F12": true,
+        "remote_debugging_port": 0,
+        "command_line_switches": {},
+        "enable_downloads": true,
+        "context_menu": {
+            "enable_menu": true,
+            "navigation": true,
+            "print": true,
+            "view_source": true,
+            "open_in_external_browser": true,
+            "devtools": true,
+            "reload_page": true
         }
+    },
+    "window": {
+        "title": "数通天下智能快捷报关远程数据传输助理",
+        "icon": "",
+        "popup_icon": "",
+        "popup_title": "",
+        "popup_default_size": [800, 600],
+        "default_size": [2000, 1400],
+        "minimum_size": [800, 600],
+        "maximum_size": [0, 0],
+        "disable_maximize_button": false,
+        "center_relative_to_parent": true,
+        "center_on_screen": true,
+        "start_maximized": false,
+        "start_fullscreen": false,
+        "always_on_top": false,
+        "dpi_aware": false,
+        "minimize_to_tray": true,
+        "minimize_to_tray_message": "数通天下智能快捷报关远程数据传输助理将转到后台继续运行",
+        "startup_to_tray_message": "欢迎使用数通天下智能快捷报关远程数据传输助理",
+        "instance": true
+    },
+    "integration": {
+        "show_console": false,
+        "subprocess_show_console": false,
+        "log_level": "DEBUG4",
+        "log_file": "log\\bridge.log",
+        "callback": "http://192.168.18.50:1845/notify",
+        "homepage": "http://192.168.18.50:1845/",
+        "startup": ".\\sws.exe -s",
+        "temp": ".\\tmp",
+        "listen": 8080,
+        "wwwroot": "www",
+        "hides": [],
+        "index": ["index.html", "index.php"],
+        "404_handler": "/pretty-urls.php"
     }
 }

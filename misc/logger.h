@@ -140,17 +140,17 @@ class FILELOG_DECLSPEC FILELog : public Log<Output2FILE> {};
 #define FILELOG_MAX_LEVEL logTRACE
 #endif
 
-#define LOG(level) \
+#define FLOG(level) \
     if (level > FILELOG_MAX_LEVEL) ;\
     else if (level > FILELog::ReportingLevel() || !Output2FILE::Stream()) ; \
     else FILELog().Get(level)
 
-#define LOG_CRITICAL LOG(logCRITICAL)
-#define LOG_ERROR LOG(logERROR)
-#define LOG_WARNING LOG(logWARNING)
-#define LOG_INFO LOG(logINFO)
-#define LOG_DEBUG LOG(logDEBUG)
-#define LOG_TRACE LOG(logTRACE)
+#define FLOG_CRITICAL FLOG(logCRITICAL)
+#define FLOG_ERROR FLOG(logERROR)
+#define FLOG_WARNING FLOG(logWARNING)
+#define FLOG_INFO FLOG(logINFO)
+#define FLOG_DEBUG FLOG(logDEBUG)
+#define FLOG_TRACE FLOG(logTRACE)
 
 inline std::string NowTime() {
     std::stringstream ss;
@@ -166,7 +166,7 @@ static void LogLastError(LPCWSTR lpFunctionName) {
 
 	FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, dwError, 0, strMsgBuf, szMsgBuf, NULL);
 
-	LOG_ERROR << lpFunctionName << ":" << szMsgBuf << strMsgBuf;
+	FLOG_ERROR << lpFunctionName << ":" << szMsgBuf << strMsgBuf;
 
 	delete[] strMsgBuf;
 }
@@ -202,18 +202,18 @@ static void InitializeLogging(bool show_console, std::string log_level, std::str
                     NULL);
         if (g_logFileHandle == INVALID_HANDLE_VALUE) {
             g_logFileHandle = NULL;
-            LOG_ERROR << "Opening log file for appending failed";
+            FLOG_ERROR << "Opening log file for appending failed";
             return;
         }
         int fd = _open_osfhandle((intptr_t)g_logFileHandle, _O_APPEND | _O_RDONLY);
         if (fd == -1) {
-            LOG_ERROR << "Opening log file for appending failed, _open_osfhandle() failed";
+            FLOG_ERROR << "Opening log file for appending failed, _open_osfhandle() failed";
             return;
         }
         FILE* pFile = _fdopen(fd, "a+");
         if (pFile == 0) {
             _close(fd);
-            LOG_ERROR << "Opening log file for appending failed, _fdopen() failed";
+            FLOG_ERROR << "Opening log file for appending failed, _fdopen() failed";
             return;
         }
         // TODO: should we call fclose(pFile) later?

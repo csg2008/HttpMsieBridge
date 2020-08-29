@@ -109,7 +109,7 @@ HRESULT STDMETHODCALLTYPE HostDispatch::Invoke(
     // #Download_Control
 
     if (dispId == DISPID_AMBIENT_DLCONTROL) {
-        LOG_DEBUG << "DISPID_AMBIENT_DLCONTROL";
+        FLOG_DEBUG << "DISPID_AMBIENT_DLCONTROL";
         // DLCTL_BGSOUNDS - The browsing component will play background
         //                  sounds associated with the document.
         // DLCTL_DLIMAGES - The browsing component will download images from

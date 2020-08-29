@@ -92,7 +92,7 @@ BrowserWindow* getBrowse(const Request &req, Response &res) {
     if ("" != pid) {
         browser = GetBrowserWindow(pid);
         if (!browser) {
-            LOG_WARNING << "router(): could not fetch BrowserWindow";
+            FLOG_WARNING << "router(): could not fetch BrowserWindow";
 
             res.set_content("could not fetch BrowserWindow", "text/plain");
         }
@@ -373,8 +373,8 @@ int httptest(int port) {
 }
 
 bool StartWebServer() {
-    LOG_INFO << "Starting web server, Built on: " << __DATE__;
-    LOG_INFO << "CPU Core " << std::thread::hardware_concurrency();
+    FLOG_INFO << "Starting web server, Built on: " << __DATE__;
+    FLOG_INFO << "CPU Core " << std::thread::hardware_concurrency();
 
 
     nlohmann::json* appSettings = GetApplicationSettings();
@@ -398,7 +398,7 @@ bool StartWebServer() {
     }
     if (indexFiles.empty())
         indexFiles = "index.html,index.php";
-    LOG_INFO << "Index files: " << indexFiles;
+    FLOG_INFO << "Index files: " << indexFiles;
 
 
     // Hide files patterns.
@@ -414,7 +414,7 @@ bool StartWebServer() {
             hide_files_patterns.append("**/").append(pattern).append("$");
         }
     }
-    LOG_INFO << "Hide files patterns: " << hide_files_patterns;
+    FLOG_INFO << "Hide files patterns: " << hide_files_patterns;
 
     // Ip address and port. If port was set to 0, then real port
     // will be known only after the webserver was started.
@@ -428,7 +428,7 @@ bool StartWebServer() {
         portInt = 8080;
     }
 
-    LOG_INFO << "Starting web server on port " << portInt;
+    FLOG_INFO << "Starting web server on port " << portInt;
 
     std::thread th(httptest, portInt);
     th.detach();
@@ -437,7 +437,7 @@ bool StartWebServer() {
 }
 
 void StopWebServer() {
-    LOG_INFO << "Stopping web server";
+    FLOG_INFO << "Stopping web server";
 
     if (svr.is_running()) {
         svr.stop();

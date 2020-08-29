@@ -267,7 +267,7 @@ HRESULT STDMETHODCALLTYPE DocHostUiHandler::GetOptionKeyPath(
     // See this StackOverflow answer:
     // http://stackoverflow.com/a/8918293/623622
 
-    LOG_DEBUG << "DocHostUiHandler::GetOptionKeyPath(): "
+    FLOG_DEBUG << "DocHostUiHandler::GetOptionKeyPath(): "
             "registry path: " << WideToUtf8(WEBVIEW_APPLICATION);
 
     // Main options:

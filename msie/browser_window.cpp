@@ -61,7 +61,7 @@ std::map<std::string, BrowserWindow*> g_browserWindows;
 std::map<std::string, std::string> GetBrowserList() {
     std::map<std::string, std::string> list;
     std::map<std::string, BrowserWindow*>::iterator iter;
-    for(iter = g_browserWindows.begin(); iter != g_browserWindows.end(); iter++) { 
+    for(iter = g_browserWindows.begin(); iter != g_browserWindows.end(); iter++) {
         list[iter->first] = iter -> second -> GetOrgUrl();
     }
 
@@ -76,21 +76,21 @@ BrowserWindow* GetBrowserWindow(std::string hwnd) {
 
     // GetBrowserWindow() may fail during window creation, so log
     // severity is only DEBUG.
-    LOG_DEBUG << "GetBrowserWindow(): not found, hwnd = " << hwnd;
+    FLOG_DEBUG << "GetBrowserWindow(): not found, hwnd = " << hwnd;
     return NULL;
 }
 void StoreBrowserWindow(std::string hwnd, BrowserWindow* browser) {
-    LOG_DEBUG << "StoreBrowserWindow(): hwnd = " << hwnd;
+    FLOG_DEBUG << "StoreBrowserWindow(): hwnd = " << hwnd;
     std::map<std::string, BrowserWindow*>::iterator it;
     it = g_browserWindows.find(hwnd);
     if (it == g_browserWindows.end()) {
         g_browserWindows[hwnd] = browser;
     } else {
-        LOG_WARNING << "StoreBrowserWindow() failed: already stored";
+        FLOG_WARNING << "StoreBrowserWindow() failed: already stored";
     }
 }
 void RemoveBrowserWindow(std::string hwnd) {
-    LOG_DEBUG << "RemoveBrowserWindow(): hwnd = " << hwnd;
+    FLOG_DEBUG << "RemoveBrowserWindow(): hwnd = " << hwnd;
     std::map<std::string, BrowserWindow*>::iterator it;
     it = g_browserWindows.find(hwnd);
     if (it != g_browserWindows.end()) {
@@ -98,32 +98,32 @@ void RemoveBrowserWindow(std::string hwnd) {
         g_browserWindows.erase(it);
         delete browser;
     } else {
-        LOG_WARNING << "RemoveBrowserWindow() failed: not found";
+        FLOG_WARNING << "RemoveBrowserWindow() failed: not found";
     }
 }
 void PCStrToPPostData(LPCTSTR postData, VARIANT* pvNewPostData) {
-    int ipdSize = WideCharToMultiByte(CP_ACP, 0, postData, -1, 0, 0, 0, 0);  
-    // int ipdSize = strlen(ppcPostData) ;  
+    int ipdSize = WideCharToMultiByte(CP_ACP, 0, postData, -1, 0, 0, 0, 0);
+    // int ipdSize = strlen(ppcPostData) ;
     if(ipdSize>0) {
         char* pcPostData = new char[ipdSize + 1];
-        // strcpy(pcPostData,ppcPostData) ;  
-        WideCharToMultiByte(CP_ACP, 0, postData, -1, pcPostData, ipdSize, 0, 0); 
+        // strcpy(pcPostData,ppcPostData) ;
+        WideCharToMultiByte(CP_ACP, 0, postData, -1, pcPostData, ipdSize, 0, 0);
         SAFEARRAY FAR* psaPostData = NULL;
-        SAFEARRAYBOUND saBound; 
+        SAFEARRAYBOUND saBound;
         saBound.cElements = (ULONG) (strlen(pcPostData));
-        saBound.lLbound = 0; 
-        psaPostData = SafeArrayCreate(VT_UI1, 1, &saBound); 
-        char* pChar = pcPostData ; 
+        saBound.lLbound = 0;
+        psaPostData = SafeArrayCreate(VT_UI1, 1, &saBound);
+        char* pChar = pcPostData ;
         for (long lIndex = 0; lIndex < (signed)saBound.cElements; lIndex++) {
             SafeArrayPutElement(psaPostData, &lIndex, (void*)((pChar++)));
-        }  
+        }
         (*pvNewPostData).vt = VT_ARRAY | VT_UI1;
-        (*pvNewPostData).parray = psaPostData ;    
-        // SafeArrayDestroy(psaPostData) ; 
+        (*pvNewPostData).parray = psaPostData ;
+        // SafeArrayDestroy(psaPostData) ;
         delete[] pcPostData;
         pcPostData = NULL;
-        pChar = NULL; 
-    } 
+        pChar = NULL;
+    }
 }
 
 BrowserWindow::BrowserWindow(HWND inWindowHandle, std::string url)
@@ -154,7 +154,7 @@ BrowserWindow::BrowserWindow(HWND inWindowHandle, std::string url)
 
     str_hwnd = std::to_string((long long) windowHandle_);
     parentHandle_ = GetParentWindow(windowHandle_);
-    LOG_DEBUG << "BrowserWindow(): parentHandle = " << parentHandle_;
+    FLOG_DEBUG << "BrowserWindow(): parentHandle = " << parentHandle_;
 
     clickDispatch_.vt = VT_DISPATCH;
     clickDispatch_.pdispVal = static_cast<IDispatch*>(clickEvents_.get());
@@ -170,7 +170,7 @@ BrowserWindow::BrowserWindow(HWND inWindowHandle, std::string url)
     SetAllowedUrl(Utf8ToWide(url).c_str());
     if (IsPopup()) {
         if (!CreateBrowserControl("")) {
-            LOG_ERROR << "BrowserWindow::CreateBrowserControl() failed";
+            FLOG_ERROR << "BrowserWindow::CreateBrowserControl() failed";
             _ASSERT(false);
             SendMessage(windowHandle_, WM_CLOSE, 0, 0);
             return;
@@ -194,14 +194,14 @@ bool BrowserWindow::CreateBrowserControl(std::string url) {
     // Create browser control.
     hr = CoCreateInstance(CLSID_WebBrowser, NULL, CLSCTX_INPROC_SERVER | CLSCTX_INPROC_HANDLER, IID_IOleObject, (void**)&oleObject_);
     if (FAILED(hr) || !oleObject_) {
-        LOG_ERROR << "BrowserWindow::CreateBrowserControl() failed: CoCreateInstance(CLSID_WebBrowser) failed";
+        FLOG_ERROR << "BrowserWindow::CreateBrowserControl() failed: CoCreateInstance(CLSID_WebBrowser) failed";
         _ASSERT(false);
         return false;
     }
 
     hr = oleObject_->SetClientSite(oleClientSite_.get());
     if (FAILED(hr)) {
-        LOG_ERROR << "BrowserWindow::CreateBrowserControl() failed: SetClientSite() failed";
+        FLOG_ERROR << "BrowserWindow::CreateBrowserControl() failed: SetClientSite() failed";
         _ASSERT(false);
         return false;
     }
@@ -209,41 +209,41 @@ bool BrowserWindow::CreateBrowserControl(std::string url) {
     RECT rect;
     b = GetClientRect(windowHandle_, &rect);
     if (!b) {
-        LOG_ERROR << "BrowserWindow::CreateBrowserControl() failed: GetClientRect() failed";
+        FLOG_ERROR << "BrowserWindow::CreateBrowserControl() failed: GetClientRect() failed";
         _ASSERT(false);
         return false;
     }
 
     hr = oleObject_->SetHostNames(CLASS_NAME_MSIE_EX, 0);
     if (FAILED(hr)) {
-        LOG_ERROR << "BrowserWindow::CreateBrowserControl() failed: IOleObject->SetHostNames() failed";
+        FLOG_ERROR << "BrowserWindow::CreateBrowserControl() failed: IOleObject->SetHostNames() failed";
         _ASSERT(false);
         return false;
     }
 
     hr = OleSetContainedObject(static_cast<IUnknown*>(oleObject_), TRUE);
     if (FAILED(hr)) {
-        LOG_ERROR << "BrowserWindow::CreateBrowserControl() failed: OleSetContaintedObject() failed";
+        FLOG_ERROR << "BrowserWindow::CreateBrowserControl() failed: OleSetContaintedObject() failed";
         _ASSERT(false);
         return false;
     }
 
     hr = oleObject_->DoVerb(OLEIVERB_SHOW, NULL, static_cast<IOleClientSite*>(oleClientSite_.get()), 0, windowHandle_, &rect);
     if (FAILED(hr)) {
-        LOG_ERROR << "BrowserWindow::CreateBrowserControl() failed: DoVerb(OLEIVERB_INPLACEACTIVATE) failed";
+        FLOG_ERROR << "BrowserWindow::CreateBrowserControl() failed: DoVerb(OLEIVERB_INPLACEACTIVATE) failed";
         _ASSERT(false);
         return false;
     }
 
     hr = oleObject_->QueryInterface(IID_IOleInPlaceActiveObject, (void**)&oleInPlaceActiveObject_);
     if (FAILED(hr) || !oleInPlaceActiveObject_) {
-        LOG_DEBUG << "BrowserWindow::TranslateAccelerator() failed: IOleObject->QueryInterface(IOleInPlaceActiveObject) failed";
+        FLOG_DEBUG << "BrowserWindow::TranslateAccelerator() failed: IOleObject->QueryInterface(IOleInPlaceActiveObject) failed";
         return false;
     }
 
     oleObject_->QueryInterface(IID_IWebBrowser2, (void**)&webBrowser2_);
     if (FAILED(hr) || !webBrowser2_) {
-        LOG_ERROR << "BrowserWindow::CreateBrowserControl() failed: QueryInterface(IID_IWebBrowser2) failed";
+        FLOG_ERROR << "BrowserWindow::CreateBrowserControl() failed: QueryInterface(IID_IWebBrowser2) failed";
         _ASSERT(false);
         return false;
     }
@@ -252,7 +252,7 @@ bool BrowserWindow::CreateBrowserControl(std::string url) {
     if (hide_dialog_boxes) {
         hr = webBrowser2_->put_Silent(VARIANT_TRUE);
         if (FAILED(hr)) {
-            LOG_WARNING << "Hiding dialog boxes failed";
+            FLOG_WARNING << "Hiding dialog boxes failed";
         }
     }
 
@@ -265,7 +265,7 @@ bool BrowserWindow::CreateBrowserControl(std::string url) {
     // Do not allow displaying files dragged into the window.
     hr = webBrowser2_->put_RegisterAsDropTarget(VARIANT_FALSE);
     if (FAILED(hr)) {
-        LOG_WARNING << "BrowserWindow::CreateBrowserControl(): put_RegisterAsDropTarget(False) failed";
+        FLOG_WARNING << "BrowserWindow::CreateBrowserControl(): put_RegisterAsDropTarget(False) failed";
     }
 
     hr = webBrowser2_->put_RegisterAsBrowser(VARIANT_FALSE);
@@ -286,7 +286,7 @@ bool BrowserWindow::Navigate(bool isPost, std::string url, std::string header, c
     if (!webBrowser2_)
         return false;
     if (url.empty()) {
-        LOG_ERROR << "BrowserWindow::Navigate() failed: url is empty";
+        FLOG_ERROR << "BrowserWindow::Navigate() failed: url is empty";
         _ASSERT(false);
         return false;
     }
@@ -323,8 +323,8 @@ bool BrowserWindow::Navigate(bool isPost, std::string url, std::string header, c
     vHeaders.vt = VT_BSTR;
     vHeaders.bstrVal = SysAllocString(Utf8ToWide(header).c_str());
 
-    if (isPost) {  
-        PCStrToPPostData(Utf8ToWide(data).c_str(), &vPostData); 
+    if (isPost) {
+        PCStrToPPostData(Utf8ToWide(data).c_str(), &vPostData);
 
         hr = webBrowser2_->Navigate2(&vURL, &vFlags, &vNull, &vPostData, &vHeaders);
     } else {
@@ -332,7 +332,7 @@ bool BrowserWindow::Navigate(bool isPost, std::string url, std::string header, c
     }
 
     if (FAILED(hr)) {
-        LOG_ERROR << "BrowserWindow::Navigate() failed: IWebBrowser2->Navigate() failed";
+        FLOG_ERROR << "BrowserWindow::Navigate() failed: IWebBrowser2->Navigate() failed";
         _ASSERT(false);
         ret = false;
     }
@@ -347,7 +347,7 @@ bool BrowserWindow::Navigate(bool isPost, std::string url, std::string header, c
     return ret;
 }
 void BrowserWindow::CloseWebBrowser2() {
-    LOG_DEBUG << "BrowserWindow::CloseWebBrowser2()";
+    FLOG_DEBUG << "BrowserWindow::CloseWebBrowser2()";
 
     // This function may be called from window.external.CloseWindow()
     // or BrowserWindow::CloseBrowserControl().
@@ -387,7 +387,7 @@ void BrowserWindow::CloseWebBrowser2() {
     webBrowser2_.Release();
 }
 void BrowserWindow::CloseBrowserControl() {
-    LOG_DEBUG << "BrowserWindow::CloseBrowserControl()";
+    FLOG_DEBUG << "BrowserWindow::CloseBrowserControl()";
 
     if (!webBrowser2_)
         return;
@@ -436,7 +436,7 @@ bool BrowserWindow::DetachClickEvents() {
     IHTMLDocument2Ptr htmlDocument2;
     hr = dispatch->QueryInterface(IID_IHTMLDocument2, (void**)&htmlDocument2);
     if (FAILED(hr) || !htmlDocument2) {
-        LOG_WARNING << "BrowserWindow::DetachClickEvents() failed: QueryInterface(IHTMLDocument2)";
+        FLOG_WARNING << "BrowserWindow::DetachClickEvents() failed: QueryInterface(IHTMLDocument2)";
         return false;
     }
     _variant_t emptyClickDispatch;
@@ -446,7 +446,7 @@ bool BrowserWindow::DetachClickEvents() {
     // emptyClickDispatch.ppdispVal = 0;
     hr = htmlDocument2->put_onclick(emptyClickDispatch);
     if (FAILED(hr)) {
-        LOG_WARNING << "BrowserWindow::DetachClickEvents() failed: htmlDocument2->put_onclick() failed";
+        FLOG_WARNING << "BrowserWindow::DetachClickEvents() failed: htmlDocument2->put_onclick() failed";
         return false;
     }
     return true;
@@ -478,19 +478,19 @@ bool BrowserWindow::TryAttachClickEvents() {
     IHTMLDocument3Ptr htmlDocument3;
     hr = dispatch->QueryInterface(IID_IHTMLDocument3, (void**)&htmlDocument3);
     if (FAILED(hr) || !htmlDocument3) {
-        LOG_WARNING << "BrowserWindow::TryAttachClickEvents() failed, QueryInterface(IHTMLDocument3) failed";
+        FLOG_WARNING << "BrowserWindow::TryAttachClickEvents() failed, QueryInterface(IHTMLDocument3) failed";
         return false;
     }
     IHTMLElementPtr htmlElement;
     hr = htmlDocument3->get_documentElement(&htmlElement);
     if (FAILED(hr) || !htmlElement) {
-        LOG_WARNING << "BrowserWindow::TryAttachClickEvents() failed, get_documentElement() failed";
+        FLOG_WARNING << "BrowserWindow::TryAttachClickEvents() failed, get_documentElement() failed";
         return false;
     }
     _bstr_t documentID;
     hr = htmlElement->get_id(&documentID.GetBSTR());
     if (FAILED(hr)) {
-        LOG_WARNING << "BrowserWindow::TryAttachClickEvents() failed, htmlElement->get_id() failed";
+        FLOG_WARNING << "BrowserWindow::TryAttachClickEvents() failed, htmlElement->get_id() failed";
         return false;
     }
     if (documentID.length() && documentID == documentUniqueID_) {
@@ -501,12 +501,12 @@ bool BrowserWindow::TryAttachClickEvents() {
         _bstr_t uniqueID;
         hr = htmlDocument3->get_uniqueID(&uniqueID.GetBSTR());
         if (FAILED(hr)) {
-            LOG_WARNING << "BrowserWindow::TryAttachClickEvents() failed: htmlDocument3->get_uniqueID() failed";
+            FLOG_WARNING << "BrowserWindow::TryAttachClickEvents() failed: htmlDocument3->get_uniqueID() failed";
             return false;
         }
         hr = htmlElement->put_id(uniqueID.GetBSTR());
         if (FAILED(hr)) {
-            LOG_WARNING << "BrowserWindow::TryAttachClickEvents() failed: htmlElement->put_id() failed";
+            FLOG_WARNING << "BrowserWindow::TryAttachClickEvents() failed: htmlElement->put_id() failed";
             return false;
         }
         documentUniqueID_.Assign(uniqueID.GetBSTR());
@@ -517,12 +517,12 @@ bool BrowserWindow::TryAttachClickEvents() {
     IHTMLDocument2Ptr htmlDocument2;
     hr = dispatch->QueryInterface(IID_IHTMLDocument2, (void**)&htmlDocument2);
     if (FAILED(hr) || !htmlDocument2) {
-        LOG_WARNING << "BrowserWindow::TryAttachClickEvents() failed: QueryInterface(IHTMLDocument2)";
+        FLOG_WARNING << "BrowserWindow::TryAttachClickEvents() failed: QueryInterface(IHTMLDocument2)";
         return false;
     }
     hr = htmlDocument2->put_onclick(clickDispatch_);
     if (FAILED(hr)) {
-        LOG_WARNING << "BrowserWindow::TryAttachClickEvents() failed: htmlDocument2->put_onclick() failed";
+        FLOG_WARNING << "BrowserWindow::TryAttachClickEvents() failed: htmlDocument2->put_onclick() failed";
         return false;
     }
     this->clickEventsAttached_ = true;
@@ -532,24 +532,24 @@ bool BrowserWindow::AdviseEvent(IWebBrowser2Ptr webBrowser2, REFIID riid, DWORD*
     IConnectionPointContainerPtr connectionPointContainer;
     HRESULT hr = webBrowser2->QueryInterface(IID_IConnectionPointContainer, (void**)&connectionPointContainer);
     if (FAILED(hr) || !connectionPointContainer) {
-        LOG_WARNING << "BrowserWindow::AdviseEvent() failed: QueryInterface(IConnectionPointContainer) failed";
+        FLOG_WARNING << "BrowserWindow::AdviseEvent() failed: QueryInterface(IConnectionPointContainer) failed";
         return false;
     }
     IConnectionPointPtr connectionPoint;
     hr = connectionPointContainer->FindConnectionPoint(riid, &connectionPoint);
     if (FAILED(hr) || !connectionPoint) {
-        LOG_WARNING << "BrowserWindow::AdviseEvent() failed: FindConnectionPoint() failed";
+        FLOG_WARNING << "BrowserWindow::AdviseEvent() failed: FindConnectionPoint() failed";
         return false;
     }
     IUnknownPtr unknown;
     hr = oleClientSite_.get()->QueryInterface(IID_IUnknown, (void**)&unknown);
     if (FAILED(hr) || !unknown) {
-        LOG_WARNING << "BrowserWindow::AdviseEvent() failed: QueryInterface(IUnknown) failed";
+        FLOG_WARNING << "BrowserWindow::AdviseEvent() failed: QueryInterface(IUnknown) failed";
         return false;
     }
     hr = connectionPoint->Advise(unknown, adviseCookie);
     if (FAILED(hr) && !(*adviseCookie)) {
-        LOG_WARNING << "BrowserWindow::AdviseEvent() failed: connectionPoint->Advise() failed";
+        FLOG_WARNING << "BrowserWindow::AdviseEvent() failed: connectionPoint->Advise() failed";
         return false;
     }
     return true;
@@ -558,18 +558,18 @@ bool BrowserWindow::UnadviseEvent(IWebBrowser2Ptr webBrowser2, REFIID riid, DWOR
     IConnectionPointContainerPtr connectionPointContainer;
     HRESULT hr = webBrowser2->QueryInterface(IID_IConnectionPointContainer, (void**)&connectionPointContainer);
     if (FAILED(hr) || !connectionPointContainer) {
-        LOG_DEBUG << "BrowserWindow::UnaviseEvent() failed: QueryInterface(IConnectionPointContainer) failed";
+        FLOG_DEBUG << "BrowserWindow::UnaviseEvent() failed: QueryInterface(IConnectionPointContainer) failed";
         return false;
     }
     IConnectionPointPtr connectionPoint;
     hr = connectionPointContainer->FindConnectionPoint(riid, &connectionPoint);
     if (FAILED(hr) || !connectionPoint) {
-        LOG_DEBUG << "BrowserWindow::UnadviseEvent() failed: FindConnectionPoint() failed";
+        FLOG_DEBUG << "BrowserWindow::UnadviseEvent() failed: FindConnectionPoint() failed";
         return false;
     }
     hr = connectionPoint->Unadvise(adviseCookie);
     if (FAILED(hr)) {
-        LOG_DEBUG << "BrowserWindow::UnadviseEvent() failed: Unadvise() failed";
+        FLOG_DEBUG << "BrowserWindow::UnadviseEvent() failed: Unadvise() failed";
         return false;
     }
     return true;
@@ -589,14 +589,14 @@ BOOL BrowserWindow::GetJScripts(CComPtr<IHTMLElementCollection>& spColl) {
     CComPtr<IDispatch> spDisp = NULL;
     HRESULT hr = webBrowser2_->get_Document(&spDisp);
     if (FAILED(hr) || !spDisp) {
-        LOG_WARNING << "BrowserWindow::SetProperty() failed, get_Document() failed";
+        FLOG_WARNING << "BrowserWindow::SetProperty() failed, get_Document() failed";
         return false;
     }
 
 	CComPtr<IHTMLDocument2>	m_spDoc = NULL;
 	hr = spDisp->QueryInterface(IID_IHTMLDocument2, (void **)&m_spDoc);
 	if (FAILED(hr)) {
-		LOG_WARNING << "Failed to get HTML document COM object";
+		FLOG_WARNING << "Failed to get HTML document COM object";
 		return false;
 	}
 
@@ -620,25 +620,25 @@ bool BrowserWindow::GetActiveHtmlElement(wchar_t* outTag, int outTagSize, wchar_
     IDispatchPtr dispatch;
     hr = webBrowser2_->get_Document(&dispatch);
     if (FAILED(hr) || !dispatch) {
-        LOG_WARNING << "BrowserWindow::GetActiveHtmlElement() failed, get_Document() failed";
+        FLOG_WARNING << "BrowserWindow::GetActiveHtmlElement() failed, get_Document() failed";
         return false;
     }
     IHTMLDocument2Ptr htmlDocument2;
     hr = dispatch->QueryInterface(IID_IHTMLDocument2, (void**)&htmlDocument2);
     if (FAILED(hr) || !htmlDocument2) {
-        LOG_WARNING << "BrowserWindow::GetActiveHtmlElement() failed, QueryInterface(IHTMLDocument2) failed";
+        FLOG_WARNING << "BrowserWindow::GetActiveHtmlElement() failed, QueryInterface(IHTMLDocument2) failed";
         return false;
     }
     IHTMLElementPtr htmlElement;
     hr = htmlDocument2->get_activeElement(&htmlElement);
     if (FAILED(hr) || !htmlElement) {
-        LOG_WARNING << "BrowserWindow::GetActiveHtmlElement() failed, get_activeElement() failed";
+        FLOG_WARNING << "BrowserWindow::GetActiveHtmlElement() failed, get_activeElement() failed";
         return false;
     }
     _bstr_t tag;
     hr = htmlElement->get_tagName(tag.GetAddress());
     if (FAILED(hr)) {
-        LOG_WARNING << "BrowserWindow::GetActiveHtmlElement() failed, get_tagName() failed";
+        FLOG_WARNING << "BrowserWindow::GetActiveHtmlElement() failed, get_tagName() failed";
         return false;
     }
     ires = swprintf_s(outTag, outTagSize, L"%s", tag.GetBSTR());
@@ -649,7 +649,7 @@ bool BrowserWindow::GetActiveHtmlElement(wchar_t* outTag, int outTagSize, wchar_
     VariantInit(&attrvalue);
     hr = htmlElement->getAttribute(type, 0 | 2, &attrvalue);
     if (FAILED(hr)) {
-        LOG_WARNING << "BrowserWindow::GetActiveHtmlElement() failed, getAttribute() failed";
+        FLOG_WARNING << "BrowserWindow::GetActiveHtmlElement() failed, getAttribute() failed";
         return false;
     }
     if (attrvalue.vt == VT_BSTR) {
@@ -688,7 +688,7 @@ int BrowserWindow::ExternalIdentifier(wchar_t* function) {
  * EmbedBrowserObject() once only, and then you can make multiple calls to
  * this function to display numerous pages in the specified window.
  */
-void BrowserWindow::DoPageAction(DWORD action) {  
+void BrowserWindow::DoPageAction(DWORD action) {
     // Call the desired function
     switch (action) {
       case WEBPAGE_BACK:
@@ -735,9 +735,9 @@ void BrowserWindow::DoPageAction(DWORD action) {
 void BrowserWindow::Refresh2(int Level) {
     // REFRESH_NORMAL = 0,
     // REFRESH_IFEXPIRED = 1,
-    // REFRESH_COMPLETELY = 3 
+    // REFRESH_COMPLETELY = 3
     // refresh level https://docs.microsoft.com/en-us/previous-versions//aa768363%28v%3dvs.85%29
-    
+
     _variant_t vLevel;
     vLevel.vt=VT_I4;
     vLevel.intVal=Level;
@@ -748,24 +748,24 @@ bool BrowserWindow::Inject(BSTR* where, BSTR* html) {
     IDispatchPtr dispatch;
     hr = webBrowser2_->get_Document(&dispatch);
     if (FAILED(hr) || !dispatch) {
-        LOG_WARNING << "BrowserWindow::Inject() failed, get_Document() failed";
+        FLOG_WARNING << "BrowserWindow::Inject() failed, get_Document() failed";
         return false;
     }
 
     IHTMLDocument2Ptr htmlDocument2;
     hr = dispatch->QueryInterface(IID_IHTMLDocument2, (void**)&htmlDocument2);
     if (FAILED(hr) || !htmlDocument2) {
-        LOG_WARNING << "BrowserWindow::Inject() failed:, QueryInterface(IHTMLDocument2) failed";
+        FLOG_WARNING << "BrowserWindow::Inject() failed:, QueryInterface(IHTMLDocument2) failed";
         return false;
     }
 
     IHTMLElementPtr pBody;
     hr = htmlDocument2->get_body(&pBody);
     if (FAILED(hr) || !pBody) {
-        LOG_WARNING << "BrowserWindow::Inject() failed, get_body() failed";
+        FLOG_WARNING << "BrowserWindow::Inject() failed, get_body() failed";
         return false;
     }
-    
+
     hr = pBody -> insertAdjacentHTML(*where, *html);;
 
     return 0 == hr;
@@ -775,19 +775,19 @@ bool BrowserWindow::GetCookies(BSTR* cookie) {
     IDispatchPtr dispatch;
     hr = webBrowser2_->get_Document(&dispatch);
     if (FAILED(hr) || !dispatch) {
-        LOG_WARNING << "BrowserWindow::GetCookies() failed, get_Document() failed";
+        FLOG_WARNING << "BrowserWindow::GetCookies() failed, get_Document() failed";
         return false;
     }
- 
+
     IHTMLDocument2Ptr htmlDocument2;
     hr = dispatch->QueryInterface(IID_IHTMLDocument2, (void**)&htmlDocument2);
     if (FAILED(hr) || !htmlDocument2) {
-        LOG_WARNING << "BrowserWindow::GetCookies() failed:, QueryInterface(IHTMLDocument2) failed";
+        FLOG_WARNING << "BrowserWindow::GetCookies() failed:, QueryInterface(IHTMLDocument2) failed";
         return false;
     }
 
     hr = htmlDocument2 -> get_cookie(cookie);
-    
+
     return 0 == hr;
 }
 bool BrowserWindow::GetHttpOnlyCookie(LPCWSTR url, LPCWSTR key, LPWSTR val) {
@@ -795,20 +795,29 @@ bool BrowserWindow::GetHttpOnlyCookie(LPCWSTR url, LPCWSTR key, LPWSTR val) {
 
   return InternetGetCookieEx(url, key, val, &dwSize, INTERNET_COOKIE_HTTPONLY | INTERNET_COOKIE_THIRD_PARTY , NULL);
 }
+// std::wstring GetCookies( std::wstring strDomain ) {
+//     LPDWORD lpdwSize = new DWORD;
+//     wchar_t strCookie[2048] = {0};
+//     int size = 0;
 
+//     //InternetGetCookieEx 在IE7和IE6里也是取不全cookie。
+//     InternetGetCookieEx(strDomain.c_str(), NULL, strCookie, lpdwSize, 0x2000, NULL);
+//     wstring wsCookies = strCookie;
+//     return wsCookies;
+// }
 bool BrowserWindow::GetHtml(BSTR* html) {
     HRESULT hr;
     IDispatchPtr dispatch;
     hr = webBrowser2_->get_Document(&dispatch);
     if (FAILED(hr) || !dispatch) {
-        LOG_WARNING << "BrowserWindow::GetHtml() failed, get_Document() failed";
+        FLOG_WARNING << "BrowserWindow::GetHtml() failed, get_Document() failed";
         return false;
     }
 
     IHTMLDocument2Ptr htmlDocument2;
     hr = dispatch->QueryInterface(IID_IHTMLDocument2, (void**)&htmlDocument2);
     if (FAILED(hr) || !htmlDocument2) {
-        LOG_WARNING << "BrowserWindow::GetHtml() failed:, QueryInterface(IHTMLDocument2) failed";
+        FLOG_WARNING << "BrowserWindow::GetHtml() failed:, QueryInterface(IHTMLDocument2) failed";
         return false;
     }
 
@@ -816,13 +825,13 @@ bool BrowserWindow::GetHtml(BSTR* html) {
     IHTMLElementPtr pHtml;
     hr = htmlDocument2->get_body(&pBody);
     if (FAILED(hr) || !pBody) {
-        LOG_WARNING << "BrowserWindow::GetHtml() failed, get_body() failed";
+        FLOG_WARNING << "BrowserWindow::GetHtml() failed, get_body() failed";
         return false;
     }
-    
+
     hr = pBody -> get_parentElement(&pHtml);
     if (FAILED(hr) || !pHtml) {
-        LOG_WARNING << "BrowserWindow::GetHtml() failed, get_parentElement() failed";
+        FLOG_WARNING << "BrowserWindow::GetHtml() failed, get_parentElement() failed";
         return false;
     }
 
@@ -835,35 +844,35 @@ std::string BrowserWindow::GetHtml() {
     IDispatchPtr dispatch;
     hr = webBrowser2_->get_Document(&dispatch);
     if (FAILED(hr) || !dispatch) {
-        LOG_WARNING << "BrowserWindow::GetHtml() failed, get_Document() failed";
+        FLOG_WARNING << "BrowserWindow::GetHtml() failed, get_Document() failed";
         return false;
     }
 
     IHTMLDocument2Ptr htmlDocument2;
     hr = dispatch->QueryInterface(IID_IHTMLDocument2, (void**)&htmlDocument2);
     if (FAILED(hr) || !htmlDocument2) {
-        LOG_WARNING << "Unable to get document object, DocumentHost::GetDocument did not return a valid IHTMLDocument2 pointer";
+        FLOG_WARNING << "Unable to get document object, DocumentHost::GetDocument did not return a valid IHTMLDocument2 pointer";
         return "";
     }
 
     IHTMLDocument3Ptr doc3;
     hr = htmlDocument2->QueryInterface(IID_IHTMLDocument3, (void**)&doc3);
     if (FAILED(hr) || !doc3) {
-        LOG_WARNING << "Unable to get document object, QueryInterface to IHTMLDocument3 failed";
+        FLOG_WARNING << "Unable to get document object, QueryInterface to IHTMLDocument3 failed";
         return "";
     }
 
     IHTMLElementPtr document_element;
     hr = doc3->get_documentElement(&document_element);
     if (FAILED(hr) || !document_element) {
-        LOG_WARNING << "Unable to get document element from page, call to IHTMLDocument3::get_documentElement failed";
+        FLOG_WARNING << "Unable to get document element from page, call to IHTMLDocument3::get_documentElement failed";
         return "";
     }
 
     WCHAR* html;
     hr = document_element->get_outerHTML(&html);
     if (FAILED(hr)) {
-        LOG_WARNING << "Have document element but cannot read source, call to IHTMLElement::get_outerHTML failed";
+        FLOG_WARNING << "Have document element but cannot read source, call to IHTMLElement::get_outerHTML failed";
         return "";
     }
 
@@ -871,7 +880,7 @@ std::string BrowserWindow::GetHtml() {
 }
 bool BrowserWindow::GetURL(BSTR* url) {
     HRESULT hr = webBrowser2_->get_LocationURL(url);
-    
+
     return 0 == hr;
 }
 bool BrowserWindow::GetCharset(BSTR* charset) {
@@ -879,19 +888,19 @@ bool BrowserWindow::GetCharset(BSTR* charset) {
     IDispatchPtr dispatch;
     hr = webBrowser2_->get_Document(&dispatch);
     if (FAILED(hr) || !dispatch) {
-        LOG_WARNING << "BrowserWindow::GetCharset() failed, get_Document() failed";
+        FLOG_WARNING << "BrowserWindow::GetCharset() failed, get_Document() failed";
         return false;
     }
- 
+
     IHTMLDocument2Ptr htmlDocument2;
     hr = dispatch->QueryInterface(IID_IHTMLDocument2, (void**)&htmlDocument2);
     if (FAILED(hr) || !htmlDocument2) {
-        LOG_WARNING << "BrowserWindow::GetCharset() failed:, QueryInterface(IHTMLDocument2) failed";
+        FLOG_WARNING << "BrowserWindow::GetCharset() failed:, QueryInterface(IHTMLDocument2) failed";
         return false;
     }
 
     hr = htmlDocument2 -> get_charset(charset);
-    
+
     return 0 == hr;
 }
 bool BrowserWindow::GetMime(BSTR* mime) {
@@ -899,19 +908,19 @@ bool BrowserWindow::GetMime(BSTR* mime) {
     IDispatchPtr dispatch;
     hr = webBrowser2_->get_Document(&dispatch);
     if (FAILED(hr) || !dispatch) {
-        LOG_WARNING << "BrowserWindow::GetMime() failed, get_Document() failed";
+        FLOG_WARNING << "BrowserWindow::GetMime() failed, get_Document() failed";
         return false;
     }
- 
+
     IHTMLDocument2Ptr htmlDocument2;
     hr = dispatch->QueryInterface(IID_IHTMLDocument2, (void**)&htmlDocument2);
     if (FAILED(hr) || !htmlDocument2) {
-        LOG_WARNING << "BrowserWindow::GetMime() failed:, QueryInterface(IHTMLDocument2) failed";
+        FLOG_WARNING << "BrowserWindow::GetMime() failed:, QueryInterface(IHTMLDocument2) failed";
         return false;
     }
 
     hr = htmlDocument2 -> get_mimeType(mime);
-    
+
     return 0 == hr;
 }
 bool BrowserWindow::GetTitle(BSTR* title) {
@@ -919,19 +928,19 @@ bool BrowserWindow::GetTitle(BSTR* title) {
     IDispatchPtr dispatch;
     hr = webBrowser2_->get_Document(&dispatch);
     if (FAILED(hr) || !dispatch) {
-        LOG_WARNING << "BrowserWindow::GetTitle() failed, get_Document() failed";
+        FLOG_WARNING << "BrowserWindow::GetTitle() failed, get_Document() failed";
         return false;
     }
- 
+
     IHTMLDocument2Ptr htmlDocument2;
     hr = dispatch->QueryInterface(IID_IHTMLDocument2, (void**)&htmlDocument2);
     if (FAILED(hr) || !htmlDocument2) {
-        LOG_WARNING << "BrowserWindow::GetTitle() failed:, QueryInterface(IHTMLDocument2) failed";
+        FLOG_WARNING << "BrowserWindow::GetTitle() failed:, QueryInterface(IHTMLDocument2) failed";
         return false;
     }
 
     hr = htmlDocument2 -> get_title(title);
-    
+
     return 0 == hr;
 }
 bool BrowserWindow::ExternalCall(int functionId) {
@@ -1016,7 +1025,7 @@ void BrowserWindow::OnResize(UINT uMsg, WPARAM wParam, LPARAM lParam) {
         webBrowser2_->put_Height(clientHeight);
         isResizing_ = false;
     } else {
-        LOG_WARNING << "BrowserWindow::OnResize() failed: WebBrowser2 object not created yet";
+        FLOG_WARNING << "BrowserWindow::OnResize() failed: WebBrowser2 object not created yet";
     }
 }
 void BrowserWindow::SetWidth(long newClientWidth) {
@@ -1108,7 +1117,7 @@ void BrowserWindow::SetIconFromSettings() {
         if (bigIcon) {
             SendMessage(windowHandle_, WM_SETICON, ICON_BIG, (LPARAM)bigIcon);
         } else {
-            LOG_WARNING << "Setting icon from settings file failed, (ICON_BIG)";
+            FLOG_WARNING << "Setting icon from settings file failed, (ICON_BIG)";
         }
         int smallX = GetSystemMetrics(SM_CXSMICON);
         int smallY = GetSystemMetrics(SM_CYSMICON);
@@ -1116,7 +1125,7 @@ void BrowserWindow::SetIconFromSettings() {
         if (smallIcon) {
             SendMessage(windowHandle_, WM_SETICON, ICON_SMALL, (LPARAM)smallIcon);
         } else {
-            LOG_WARNING << "Setting icon from settings file failed, (ICON_SMALL)";
+            FLOG_WARNING << "Setting icon from settings file failed, (ICON_SMALL)";
         }
     }
 }
@@ -1124,25 +1133,25 @@ HWND BrowserWindow::GetShellBrowserHandle() {
     // Calling WebBrowser2->get_HWND() fails, need to go around.
     HRESULT hr;
     if (!webBrowser2_) {
-        LOG_DEBUG << "BrowserWindow::GetShellBrowserHandle() failed: WebBrowser2 is empty";
+        FLOG_DEBUG << "BrowserWindow::GetShellBrowserHandle() failed: WebBrowser2 is empty";
         return 0;
     }
     IServiceProviderPtr serviceProvider;
     hr = webBrowser2_->QueryInterface(IID_IServiceProvider, (void**)&serviceProvider);
     if (FAILED(hr) || !serviceProvider) {
-        LOG_WARNING << "BrowserWindow::GetShellBrowserHandle() failed: WebBrowser2->QueryInterface(IServiceProvider) failed";
+        FLOG_WARNING << "BrowserWindow::GetShellBrowserHandle() failed: WebBrowser2->QueryInterface(IServiceProvider) failed";
         return 0;
     }
     IOleWindowPtr oleWindow;
     hr = serviceProvider->QueryService(SID_SShellBrowser, IID_IOleWindow, (void**)&oleWindow);
     if (FAILED(hr) || !oleWindow) {
-        LOG_WARNING << "BrowserWindow::GetShellBrowserHandle() failed: QueryService(SShellBrowser, IOleWindow) failed";
+        FLOG_WARNING << "BrowserWindow::GetShellBrowserHandle() failed: QueryService(SShellBrowser, IOleWindow) failed";
         return 0;
     }
     HWND shellBrowserHandle;
     hr = oleWindow->GetWindow(&shellBrowserHandle);
     if (FAILED(hr) || !shellBrowserHandle) {
-        LOG_WARNING << "BrowserWindow::GetShellBrowserHandle() failed: OleWindow->GetWindow() failed";
+        FLOG_WARNING << "BrowserWindow::GetShellBrowserHandle() failed: OleWindow->GetWindow() failed";
         return 0;
     }
     return shellBrowserHandle;
@@ -1153,12 +1162,12 @@ bool BrowserWindow::SetFocus() {
         return false;
     HRESULT hr = oleInPlaceActiveObject_->OnFrameWindowActivate(TRUE);
     if (FAILED(hr)) {
-        LOG_DEBUG << "BrowserWindow::SetFocus(): IOleInPlaceActiveObject->OnFrameWindowActivate() failed";
+        FLOG_DEBUG << "BrowserWindow::SetFocus(): IOleInPlaceActiveObject->OnFrameWindowActivate() failed";
         return false;
     }
     hr = oleInPlaceActiveObject_->OnDocWindowActivate(TRUE);
     if (FAILED(hr)) {
-        LOG_DEBUG << "BrowserWindow::SetFocus(): IOleInPlaceActiveObject->OnDocWindowActivate() failed";
+        FLOG_DEBUG << "BrowserWindow::SetFocus(): IOleInPlaceActiveObject->OnDocWindowActivate() failed";
         return false;
     }
     return true;
@@ -1183,7 +1192,7 @@ bool BrowserWindow::TranslateAccelerator(MSG* msg) {
         return false;
     HRESULT hr = oleInPlaceActiveObject_->TranslateAccelerator(msg);
     if (FAILED(hr)) {
-        LOG_DEBUG << "BrowserWindow::TranslateAccelerator() failed: IOleInPlaceActiveObject->TranslateAccelerator() failed";
+        FLOG_DEBUG << "BrowserWindow::TranslateAccelerator() failed: IOleInPlaceActiveObject->TranslateAccelerator() failed";
         return false;
     }
     // S_OK - translated
@@ -1198,15 +1207,15 @@ bool BrowserWindow::DisplayHtmlString(const wchar_t* htmlString) {
     IDispatchPtr documentDispatch;
     HRESULT hr = webBrowser2_->get_Document(&documentDispatch);
     if (FAILED(hr) || !documentDispatch) {
-        LOG_DEBUG << "BrowserWindow::DisplayHtmlString(): IWebBrowser2->get_Document() failed";
+        FLOG_DEBUG << "BrowserWindow::DisplayHtmlString(): IWebBrowser2->get_Document() failed";
         // If there is no document available navigate to blank page.
         bool navigated = Navigate(false, "about:blank");
-        LOG_DEBUG << "Navigated to about:blank";
+        FLOG_DEBUG << "Navigated to about:blank";
         if (!navigated)
             return false;
         hr = webBrowser2_->get_Document(&documentDispatch);
         if (FAILED(hr) || !documentDispatch) {
-            LOG_ERROR << "BrowserWindow::DisplayHtmlString() failed: IWebBrowser2->get_Document(about:blank) failed";
+            FLOG_ERROR << "BrowserWindow::DisplayHtmlString() failed: IWebBrowser2->get_Document(about:blank) failed";
             _ASSERT(false);
             return false;
         }
@@ -1214,13 +1223,13 @@ bool BrowserWindow::DisplayHtmlString(const wchar_t* htmlString) {
     IHTMLDocument2Ptr htmlDocument2;
     hr = documentDispatch->QueryInterface(&htmlDocument2);
     if (FAILED(hr) || !htmlDocument2) {
-        LOG_ERROR << "BrowserWindow::DisplayHtmlString() failed: QueryInterface(IHTMLDocument2) failed";
+        FLOG_ERROR << "BrowserWindow::DisplayHtmlString() failed: QueryInterface(IHTMLDocument2) failed";
         _ASSERT(false);
         return false;
     }
     SAFEARRAY *strings = SafeArrayCreateVector(VT_VARIANT, 0, 1);
     if (!strings) {
-        LOG_ERROR << "BrowserWindow::DisplayHtmlString() failed: SafeArrayCreateVector() failed";
+        FLOG_ERROR << "BrowserWindow::DisplayHtmlString() failed: SafeArrayCreateVector() failed";
         _ASSERT(false);
         return false;
     }
@@ -1241,19 +1250,19 @@ bool BrowserWindow::DisplayHtmlString(const wchar_t* htmlString) {
                 if (SUCCEEDED(hr)) {
                     ret = true;
                 } else {
-                    LOG_ERROR << "BrowserWindow::DisplayHtmlString() failed: IHTMLDocument2->close() failed";
+                    FLOG_ERROR << "BrowserWindow::DisplayHtmlString() failed: IHTMLDocument2->close() failed";
                     _ASSERT(false);
                 }
             } else {
-                LOG_ERROR << "BrowserWindow::DisplayHtmlString() failed: IHTMLDocument2->write() failed";
+                FLOG_ERROR << "BrowserWindow::DisplayHtmlString() failed: IHTMLDocument2->write() failed";
                 _ASSERT(false);
             }
         } else {
-            LOG_ERROR << "BrowserWindow::DisplayHtmlString() failed: SafeArrayUnaccessData() failed";
+            FLOG_ERROR << "BrowserWindow::DisplayHtmlString() failed: SafeArrayUnaccessData() failed";
             _ASSERT(false);
         }
     } else {
-        LOG_ERROR << "BrowserWindow::DisplayHtmlString() failed: SafeArrayAccessData() failed";
+        FLOG_ERROR << "BrowserWindow::DisplayHtmlString() failed: SafeArrayAccessData() failed";
         _ASSERT(false);
     }
     if (strings) {
@@ -1272,7 +1281,7 @@ bool BrowserWindow::DisplayErrorPage(const wchar_t* navigateUrl, int statusCode)
     htmlFile = GetRealPath(htmlFile);
     std::string htmlString = GetFileContents(htmlFile);
     if (htmlString.empty()) {
-        LOG_WARNING << "BrowserWindow::DisplayErrorPage() failed: file not found: " << htmlFile;
+        FLOG_WARNING << "BrowserWindow::DisplayErrorPage() failed: file not found: " << htmlFile;
         return false;
     }
     ReplaceStringInPlace(htmlString, "{{navigate_url}}", WideToUtf8(navigateUrl));
@@ -1289,7 +1298,7 @@ bool BrowserWindow::GetHtmlCode(PWCHAR pszCode, int *iszCount) {
 	IHTMLElement *pBodyElement = NULL;
 	PWCHAR pHtmlCode = NULL;
 	int iLen = 0;
- 
+
 	if (pszCode == NULL || iszCount == NULL) return bRet;
 	__try {
 		if (webBrowser2_->get_Document(&pDispatch) != ERROR_SUCCESS) __leave;
@@ -1326,7 +1335,7 @@ bool BrowserWindow::ClickElementByID(std::wstring idOrName) {
     if (0 != pElement) {
         pElement->click();
 
-        bRet = TRUE; 
+        bRet = TRUE;
     }
 
     return bRet;
@@ -1360,14 +1369,14 @@ bool BrowserWindow::ExecJsFun(const std::wstring& lpJsFun, const std::vector<std
     CComPtr<IDispatch> spDisp = NULL;
     HRESULT hr = webBrowser2_->get_Document(&spDisp);
     if (FAILED(hr) || !spDisp) {
-        LOG_WARNING << "BrowserWindow::SetProperty() failed, get_Document() failed";
+        FLOG_WARNING << "BrowserWindow::SetProperty() failed, get_Document() failed";
         return false;
     }
 
 	CComPtr<IHTMLDocument2>	m_spDoc = NULL;
 	hr = spDisp->QueryInterface(IID_IHTMLDocument2, (void **)&m_spDoc);
 	if (FAILED(hr)) {
-		LOG_WARNING << "Failed to get HTML document COM object";
+		FLOG_WARNING << "Failed to get HTML document COM object";
 		return FALSE;
 	}
 
@@ -1404,7 +1413,7 @@ bool BrowserWindow::ExecJsFun(const std::wstring& lpJsFun, const std::vector<std
 	UINT nArgErr = (UINT)-1;  // initialize to invalid arg
 
 	hr = spScript->Invoke(dispid, IID_NULL, 0, DISPATCH_METHOD, &dispParams, &vaResult, &excepInfo, &nArgErr);
-	
+
 	delete[] dispParams.rgvarg;
 	if (FAILED(hr)) {
 		return FALSE;
@@ -1421,20 +1430,20 @@ bool BrowserWindow::execScript(std::wstring js, std::wstring lang, VARIANT* ret)
     IDispatchPtr dispatch;
     hr = webBrowser2_->get_Document(&dispatch);
     if (FAILED(hr) || !dispatch) {
-        LOG_WARNING << "BrowserWindow::execScript() failed, get_Document() failed";
+        FLOG_WARNING << "BrowserWindow::execScript() failed, get_Document() failed";
         return false;
     }
     IHTMLDocument2Ptr htmlDocument2;
     hr = dispatch->QueryInterface(IID_IHTMLDocument2, (void**)&htmlDocument2);
     if (FAILED(hr) || !htmlDocument2) {
-        LOG_WARNING << "BrowserWindow::execScript() failed, QueryInterface(IHTMLDocument2) failed";
+        FLOG_WARNING << "BrowserWindow::execScript() failed, QueryInterface(IHTMLDocument2) failed";
         return false;
     }
 
     CComQIPtr<IHTMLWindow2> pHTMLWnd;
     htmlDocument2->get_parentWindow(&pHTMLWnd);
     if (FAILED(hr) || !pHTMLWnd) {
-        LOG_WARNING << "BrowserWindow::execScript() failed, QueryInterface(IHTMLWindow2) failed";
+        FLOG_WARNING << "BrowserWindow::execScript() failed, QueryInterface(IHTMLWindow2) failed";
         return false;
     }
 
@@ -1445,10 +1454,10 @@ bool BrowserWindow::execScript(std::wstring js, std::wstring lang, VARIANT* ret)
 
 IHTMLElement* BrowserWindow::GetHTMLElementByID(std::wstring id) {
 	IHTMLElementPtr pElement=0;
-	IDispatchPtr dispatch=0; 
-	HRESULT hr = webBrowser2_->get_Document(&dispatch); 
+	IDispatchPtr dispatch=0;
+	HRESULT hr = webBrowser2_->get_Document(&dispatch);
 	if ((S_OK==hr)&&(0!=dispatch)) {
-		IHTMLDocument3Ptr doc;  
+		IHTMLDocument3Ptr doc;
 		dispatch->QueryInterface(IID_IHTMLDocument3,(void**)&doc);
 		hr = doc->getElementById(_bstr_t(id.c_str()), &pElement);
         if (S_OK != hr) {
@@ -1463,45 +1472,45 @@ IHTMLElement* BrowserWindow::GetHTMLElementByID(std::wstring id) {
 
 IHTMLElement* BrowserWindow::GetHTMLElementByTag(std::wstring tagName,std::wstring PropertyName, std::wstring matchValue) {
 	IHTMLElement *retElement=0;
-	IDispatch *dispatch=0; 
-	HRESULT hr = webBrowser2_->get_Document(&dispatch); 
+	IDispatch *dispatch=0;
+	HRESULT hr = webBrowser2_->get_Document(&dispatch);
 	if ((S_OK==hr)&&(0 != dispatch)) {
-		IHTMLDocument2 *doc;  
+		IHTMLDocument2 *doc;
 		dispatch->QueryInterface(IID_IHTMLDocument2,(void**)&doc);
-		dispatch->Release(); 
+		dispatch->Release();
 		IHTMLElementCollection* doc_all;
 		hr = doc->get_all(&doc_all);      // this is like doing document.all
-		if (S_OK == hr) { 
-			VARIANT vKey; 
+		if (S_OK == hr) {
+			VARIANT vKey;
 			vKey.vt=VT_BSTR;
 			vKey.bstrVal=SysAllocString(tagName.c_str());
-			VARIANT vIndex; 
+			VARIANT vIndex;
 			VariantInit(&vIndex);
 			hr = doc_all->tags(vKey,&dispatch);       // this is like doing document.all["messages"]
 			// clean
 			SysFreeString(vKey.bstrVal);
-			VariantClear(&vKey); 
-			VariantClear(&vIndex); 
-			if ((S_OK == hr) && (0 != dispatch)) { 
+			VariantClear(&vKey);
+			VariantClear(&vIndex);
+			if ((S_OK == hr) && (0 != dispatch)) {
 				CComQIPtr< IHTMLElementCollection > all_tags = dispatch;
-				//hr = dispatch->QueryInterface(IHTMLElementCollection,(void **)&all_tags); // it's the caller's responsibility to release 
+				//hr = dispatch->QueryInterface(IHTMLElementCollection,(void **)&all_tags); // it's the caller's responsibility to release
 				if (S_OK == hr) {
 					long nTagsCount=0; //
 					hr = all_tags->get_length( &nTagsCount);
 					if ( FAILED( hr ) ) {
 						return retElement;
 					}
- 
+
 					for(long i=0; i<nTagsCount; i++) {
 						CComDispatchDriver spInputElement;
 						hr = all_tags->item( CComVariant(i), CComVariant(i), &spInputElement );
- 
-						if ( FAILED( hr ) ) 
+
+						if ( FAILED( hr ) )
 							continue;
 						CComVariant vValue;
 						hr = spInputElement.GetPropertyByName(PropertyName.c_str(), &vValue );
 						if (VT_EMPTY != vValue.vt) {
-							LPCTSTR lpValue = vValue.bstrVal? OLE2CT( vValue.bstrVal ) : NULL; 
+							LPCTSTR lpValue = vValue.bstrVal? OLE2CT( vValue.bstrVal ) : NULL;
 							if(NULL == lpValue)
 								continue;
 							std::wstring cs = (LPCTSTR)lpValue;
@@ -1529,27 +1538,27 @@ IHTMLElement* BrowserWindow::GetHTMLElementByTag(std::wstring tagName,std::wstri
 
 IHTMLElement* BrowserWindow::GetHTMLElementByName(std::wstring Name) {
 	IHTMLElement *retElement=0;
-	IDispatch *dispatch=0; 
-	HRESULT hr = webBrowser2_->get_Document(&dispatch); 
+	IDispatch *dispatch=0;
+	HRESULT hr = webBrowser2_->get_Document(&dispatch);
 	if ((S_OK==hr)&&(0!=dispatch)) {
-		IHTMLDocument2 *doc;  
+		IHTMLDocument2 *doc;
 		dispatch->QueryInterface(IID_IHTMLDocument2,(void**)&doc);
-		dispatch->Release(); 
+		dispatch->Release();
 		IHTMLElementCollection* doc_all;
 		hr = doc->get_all(&doc_all);      // this is like doing document.all
-		if (S_OK == hr) { 
-			VARIANT vKey; 
+		if (S_OK == hr) {
+			VARIANT vKey;
 			vKey.vt=VT_BSTR;
 			vKey.bstrVal=SysAllocString(Name.c_str());
-			VARIANT vIndex; 
+			VARIANT vIndex;
 			VariantInit(&vIndex);
 			hr = doc_all->item(vKey,vIndex,&dispatch);       // this is like doing document.all["messages"]
 			// clean
 			SysFreeString(vKey.bstrVal);
-			VariantClear(&vKey); 
-			VariantClear(&vIndex); 
-			if ((S_OK == hr) && (0 != dispatch)) { 
-				hr = dispatch->QueryInterface(IID_IHTMLElement,(void **)&retElement); // it's the caller's responsibility to release 
+			VariantClear(&vKey);
+			VariantClear(&vIndex);
+			if ((S_OK == hr) && (0 != dispatch)) {
+				hr = dispatch->QueryInterface(IID_IHTMLElement,(void **)&retElement); // it's the caller's responsibility to release
 				if (S_OK == hr) {
 				} else {
 					retElement = 0;
@@ -1595,6 +1604,6 @@ std::string BrowserWindow::GetOrgUrl(std::string url) {
     if ("" != url) {
         org_url = url;
     }
-    
+
     return org_url;
 }

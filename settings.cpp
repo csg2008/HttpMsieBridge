@@ -15,7 +15,7 @@ nlohmann::json* GetApplicationSettings() {
     }
 
     fetched = true;
-    LOG_DEBUG << "Fetching settings from settings.json file";
+    FLOG_DEBUG << "Fetching settings from settings.json file";
 
     std::string contents;
     std::string settingsFile;
@@ -26,7 +26,7 @@ nlohmann::json* GetApplicationSettings() {
         settingsFile = GetExecutableDirectory() + "\\settings.json";
         contents = GetFileContents(settingsFile);
         if (contents.empty()) {
-            LOG_WARNING << "Error while opening the settings.json file";
+            FLOG_WARNING << "Error while opening the settings.json file";
             return ret;
         }
     }
@@ -35,18 +35,18 @@ nlohmann::json* GetApplicationSettings() {
     *ret = nlohmann::json::parse(contents);
 
     if (!err.empty()) {
-        LOG_WARNING << "Error while parsing settings.json file: " << err;
+        FLOG_WARNING << "Error while parsing settings.json file: " << err;
     }
 
     if ((*ret)["integration"]["engine"].is_null()) {
         (*ret)["integration"]["engine"] = "msie";
     } else if ((*ret)["integration"]["engine"].is_string()) {
         if ("msie" != (*ret)["integration"]["engine"].get<std::string>() && "mb" != (*ret)["integration"]["engine"].get<std::string>()) {
-            LOG_WARNING << "Gui engine must be msie or mb, give: " << (*ret)["integration"]["engine"];
+            FLOG_WARNING << "Gui engine must be msie or mb, give: " << (*ret)["integration"]["engine"];
             (*ret)["integration"]["engine"] = "msie";
         }
     } else {
-        LOG_WARNING << "Gui engine must be msie or mb, give: " << (*ret)["integration"]["engine"];
+        FLOG_WARNING << "Gui engine must be msie or mb, give: " << (*ret)["integration"]["engine"];
         (*ret)["integration"]["engine"] = "msie";
     }
 
