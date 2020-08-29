@@ -287,6 +287,7 @@ HRESULT STDMETHODCALLTYPE BrowserEvents2::Invoke(
 
         _bstr_t bstrUrl;
         _bstr_t bstrMime;
+        _bstr_t bstrTitle;
         _bstr_t bstrCharset;
         std::string callback = (*settings)["integration"]["callback"];
 
@@ -300,6 +301,7 @@ HRESULT STDMETHODCALLTYPE BrowserEvents2::Invoke(
                 std::wstring cookieW = browserWindow_ -> GetCookies(Utf8ToWide(url));
 
                 IEMessage["url"] = url;
+                IEMessage["cookie"] = WideToUtf8(cookieW);
                 IEMessage["html"] = browserWindow_ -> GetHtml();
                 IEMessage["mime"] = std::string(bstrMime);
                 IEMessage["charset"] = charset;
