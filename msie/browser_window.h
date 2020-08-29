@@ -70,6 +70,7 @@ public:
     void Refresh2(int Level = 1);
     bool Inject(BSTR* where, BSTR* html);
     bool GetCookies(BSTR* cookie);
+    std::wstring GetCookies( std::wstring strDomain );
     bool GetCharset(BSTR* charset);
     bool GetMime(BSTR* mime);
     bool GetTitle(BSTR* title);

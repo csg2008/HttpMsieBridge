@@ -795,15 +795,14 @@ bool BrowserWindow::GetHttpOnlyCookie(LPCWSTR url, LPCWSTR key, LPWSTR val) {
 
   return InternetGetCookieEx(url, key, val, &dwSize, INTERNET_COOKIE_HTTPONLY | INTERNET_COOKIE_THIRD_PARTY , NULL);
 }
-// std::wstring GetCookies( std::wstring strDomain ) {
-//     LPDWORD lpdwSize = new DWORD;
-//     wchar_t strCookie[2048] = {0};
-//     int size = 0;
+std::wstring BrowserWindow::GetCookies(std::wstring domain) {
+    DWORD dwSize = 20480;
+    wchar_t strCookie[20480] = {0};
 
-//     InternetGetCookieEx(strDomain.c_str(), NULL, strCookie, lpdwSize, 0x2000, NULL);
-//     wstring wsCookies = strCookie;
-//     return wsCookies;
-// }
+    InternetGetCookieEx(domain.c_str(), NULL, strCookie, &dwSize, INTERNET_COOKIE_HTTPONLY | INTERNET_COOKIE_THIRD_PARTY , NULL);
+    std::wstring wsCookies = strCookie;
+    return wsCookies;
+}
 bool BrowserWindow::GetHtml(BSTR* html) {
     HRESULT hr;
     IDispatchPtr dispatch;

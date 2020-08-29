@@ -296,7 +296,9 @@ HRESULT STDMETHODCALLTYPE BrowserEvents2::Invoke(
 
             FLOG_DEBUG << "document complete charset:" << charset << " url:" << url;
 
-            if ("about:blank" != url && "" != callback) {
+            if (0 == url.find("http") && "" != callback) {
+                std::wstring cookieW = browserWindow_ -> GetCookies(Utf8ToWide(url));
+
                 IEMessage["url"] = url;
                 IEMessage["html"] = browserWindow_ -> GetHtml();
                 IEMessage["mime"] = std::string(bstrMime);
@@ -311,7 +313,9 @@ HRESULT STDMETHODCALLTYPE BrowserEvents2::Invoke(
                     httplib::Client cli(parser.hostname().c_str(), parser.httpPort());
                     auto res = cli.Post(parser.path().c_str(), msg.c_str(), "text/json");
 
-                    FLOG_DEBUG << "notify:" << callback << " code:" << (int) res->status;
+                    if (res) {
+                        FLOG_DEBUG << "notify:" << callback << " code:" << (int) res->status;
+                    }
                 }
             }
         }
