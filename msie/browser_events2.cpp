@@ -289,7 +289,9 @@ HRESULT STDMETHODCALLTYPE BrowserEvents2::Invoke(
         _bstr_t bstrMime;
         _bstr_t bstrTitle;
         _bstr_t bstrCharset;
+        bool notify = false;
         std::string callback = (*settings)["integration"]["callback"];
+        std::string homepage = (*settings)["integration"]["homepage"];
 
         if (browserWindow_ -> GetURL(bstrUrl.GetAddress()) && browserWindow_ -> GetMime(bstrMime.GetAddress()) && browserWindow_ -> GetCharset(bstrCharset.GetAddress())) {
             std::string url(bstrUrl);
@@ -297,7 +299,14 @@ HRESULT STDMETHODCALLTYPE BrowserEvents2::Invoke(
 
             FLOG_DEBUG << "document complete charset:" << charset << " url:" << url;
 
-            if (0 == url.find("http") && "" != callback) {
+            if (0 == url.find("http") && !callback.empty()) {
+                notify = true;
+                if (!homepage.empty() && 0 == url.find(homepage)) {
+                    notify = false;
+                }
+            }
+
+            if (notify){
                 std::wstring cookieW = browserWindow_ -> GetCookies(Utf8ToWide(url));
 
                 IEMessage["url"] = url;
