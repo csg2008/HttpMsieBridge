@@ -800,7 +800,6 @@ bool BrowserWindow::GetHttpOnlyCookie(LPCWSTR url, LPCWSTR key, LPWSTR val) {
 //     wchar_t strCookie[2048] = {0};
 //     int size = 0;
 
-//     //InternetGetCookieEx 在IE7和IE6里也是取不全cookie。
 //     InternetGetCookieEx(strDomain.c_str(), NULL, strCookie, lpdwSize, 0x2000, NULL);
 //     wstring wsCookies = strCookie;
 //     return wsCookies;

@@ -178,9 +178,56 @@ HRESULT STDMETHODCALLTYPE BrowserEvents2::Invoke(
             return DISP_E_BADPARAMCOUNT;
         }
 
-        _ASSERT(pDispParams->rgvarg[5].vt == (VT_VARIANT | VT_BYREF)); // Text
-        const wchar_t* navigateUrl = pDispParams->rgvarg[5].pvarVal->bstrVal;
-        browserWindow_ -> GetOrgUrl(WideToUtf8(navigateUrl));
+        //Arg0: Cancel
+        VARIANTARG argCancel = pDispParams->rgvarg[0];
+        assert(argCancel.vt == (VT_BYREF|VT_BOOL));
+
+        //Arg1: Headers
+        VARIANTARG argHeaders = pDispParams->rgvarg[1];
+        assert(argHeaders.vt == (VT_BYREF|VT_VARIANT));
+        assert(argHeaders.pvarVal->vt == VT_BSTR);
+        const wchar_t* headers = argHeaders.pvarVal->bstrVal;
+        // FLOG_DEBUG << "header: " << WideToUtf8(headers);
+
+        //Arg2: PostData
+        VARIANTARG argPostData = pDispParams->rgvarg[2];
+        assert(argPostData.vt == (VT_BYREF|VT_VARIANT));
+        assert(argPostData.pvarVal->vt == (VT_BYREF|VT_VARIANT));
+        if(argPostData.pvarVal->pvarVal->vt != VT_EMPTY) {
+            assert(argPostData.pvarVal->pvarVal->vt == (VT_ARRAY|VT_UI1));
+            SAFEARRAY* pSafeArray = argPostData.pvarVal->pvarVal->parray;
+            assert(pSafeArray);
+            assert(pSafeArray->cDims == 1 && pSafeArray->cbElements == 1); //array of VT_UI1
+            unsigned int nPostDataSize = pSafeArray->rgsabound[0].cElements * pSafeArray->cbElements; //in bytes
+            char* pPostData = (char*) pSafeArray->pvData;
+            //FLOG_DEBUG << "post: " << std::string(pPostData);
+        }
+
+        //Arg3: TargetFrameName
+        VARIANTARG argTargetFrameName = pDispParams->rgvarg[3];
+        assert(argTargetFrameName.vt == (VT_BYREF|VT_VARIANT));
+        assert(argTargetFrameName.pvarVal->vt == VT_BSTR);
+        BSTR bstrTargetFrameName = argTargetFrameName.pvarVal->bstrVal;
+        // MessageBoxW(0, bstrTargetFrameName, L"TargetFrameName", MB_OK);
+
+        //Arg4: Flags
+        VARIANTARG argFlags = pDispParams->rgvarg[4];
+        assert(argFlags.vt == (VT_BYREF|VT_VARIANT));
+        assert(argFlags.pvarVal->vt == VT_I4);
+        LONG lFlags = argFlags.pvarVal->lVal;
+
+        //Arg5: Url
+        VARIANTARG argUrl = pDispParams->rgvarg[5];
+        assert(argUrl.vt == (VT_BYREF|VT_VARIANT));
+        assert(argUrl.pvarVal->vt == VT_BSTR);
+        std::string url = WideToUtf8(argUrl.pvarVal->bstrVal);
+
+        //Arg6: WebBrowser
+        VARIANTARG argWebBrowser = pDispParams->rgvarg[6];
+        assert(argWebBrowser.vt == VT_DISPATCH);
+        IDispatch* pDispWebBrowser = argWebBrowser.pdispVal;
+
+        browserWindow_ -> GetOrgUrl(url);
     } else if (dispId == DISPID_NAVIGATEERROR) {
         if (pDispParams->cArgs != 5) {
             FLOG_WARNING << "BrowserEvents2::NavigateError() failed: Expected 5 arguments";
