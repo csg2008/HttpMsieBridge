@@ -310,7 +310,7 @@ HRESULT STDMETHODCALLTYPE BrowserEvents2::Invoke(
                 std::wstring cookieW = browserWindow_ -> GetCookies(Utf8ToWide(url));
 
                 IEMessage["url"] = url;
-                IEMessage["cookie"] = WideToUtf8(cookieW);
+                IEMessage["Cookie"] = WideToUtf8(cookieW);
                 IEMessage["html"] = browserWindow_ -> GetHtml();
                 IEMessage["mime"] = std::string(bstrMime);
                 IEMessage["charset"] = charset;
